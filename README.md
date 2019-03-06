@@ -48,6 +48,12 @@ When we create an application store with `ClearX`, it provides a simple and rich
 
 #### Usage:
 
+##### Install:
+
+```shell
+npm install clearx --save
+```
+
 ##### Creating a Store:
 
 ```javascript
