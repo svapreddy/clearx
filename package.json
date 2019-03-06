@@ -1,0 +1,60 @@
+{
+  "name": "clearx",
+  "version": "1.0.0",
+  "description": "Fast & Effortless state management for React with zero learning curve",
+  "main": "src/index.js",
+  "browser": "dist/clearx.js",
+  "scripts": {
+    "test": "npm run build && ava --tap",
+    "build": "./node_modules/.bin/rollup -c",
+    "todo": "./node_modules/.bin/rollup -c example/rollup.todoApp.config.js -w"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Autodesk/clearx"
+  },
+  "keywords": [
+    "react",
+    "preact",
+    "inferno",
+    "es6",
+    "store",
+    "state",
+    "global store",
+    "root store",
+    "global state",
+    "root state",
+    "scalable state",
+    "predictable",
+    "slice"
+  ],
+  "author": "Autodesk Inc.",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "ava": "^1.1.0",
+    "buble": "^0.19.6",
+    "package.json": "^2.0.1",
+    "react": "^16.7.0",
+    "react-dom": "^16.7.0",
+    "rollup": "^1.1.0",
+    "rollup-plugin-buble": "^0.19.6",
+    "rollup-plugin-commonjs": "^9.2.0",
+    "rollup-plugin-filesize": "^6.0.0",
+    "rollup-plugin-license": "^0.8.0",
+    "rollup-plugin-node-resolve": "^4.0.0",
+    "rollup-plugin-replace": "^2.1.0",
+    "rollup-plugin-serve": "^1.0.0",
+    "rollup-plugin-standard": "^1.0.0",
+    "rollup-plugin-uglify": "^6.0.1"
+  },
+  "dependencies": {
+    "deepmerge": "^3.1.0",
+    "fast-deep-equal": "^2.0.1",
+    "object-path": "^0.11.4"
+  },
+  "standard": {
+    "ignore": [
+      "/dist/**"
+    ]
+  }
+}

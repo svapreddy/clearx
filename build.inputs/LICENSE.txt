@@ -1,0 +1,16 @@
+/** @license
+ * Autodesk <%= data.name %>
+ * Date: <%= moment().format('YYYY-MM-DD') %>
+ * License: Apache-2.0
+ *
+ * Bundled dependencies (npm packages): 
+ * <%= (dependencies.filter(function(dependency) {
+  return dependency.name !== data.name;
+ }).map(function (dependency) { 
+  return JSON.stringify({
+    package: [dependency.name, dependency.version].join('@'),
+    license: dependency.license,
+    link: dependency.homepage
+  })
+})).join(', ') %>
+ */
