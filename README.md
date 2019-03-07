@@ -95,8 +95,8 @@ import appStore from './src/storeFile.js'
 
 // It can be a class or function. ClearX works with all.
 class MyView extends Component {
-  constructor () {
-    super(this)
+  constructor (props) {
+    super(props)
     // UI Component can have a local state.
     this.state = {
       localState1: 'test'
