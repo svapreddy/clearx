@@ -1,6 +1,6 @@
 {
   "name": "clearx",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Fast & Effortless state management for React with zero learning curve",
   "main": "src/index.js",
   "browser": "dist/clearx.js",
