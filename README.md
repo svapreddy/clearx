@@ -13,7 +13,7 @@
  
 #### Introduction: 
 
-`ClearX` provides a painless way to manage the state for Frontend application.
+`ClearX` provides a painless way to manage the state for Frontend application. Check this [link](https://codesandbox.io/embed/v6ln04730?fontsize=14) for a basic Todo App demo or checkout Todo example section
 
 ###### Advantages:
 
