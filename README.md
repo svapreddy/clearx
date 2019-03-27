@@ -25,7 +25,6 @@
 - Local state and global store can be used together. No restrictions
 - No Boilerplate code. No need of declaring data consumers and providers through UI components. No need of Decorators
 - No limit on number of stores. Store data is reversible & cloneable
-- If you need to integrate React in an application rather designing application architecture through React, ClearX helps!
 - Makes it easy to work with 3rd party libraries that have no react flavor in them
 - Helps to write tree-shaking friendly codebase.
 - Helps effective seperation of concerns
