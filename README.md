@@ -1,5 +1,5 @@
 <h1 align="center">ClearX</h1>
-<div align="center"> Fast & Effortless state management for React with zero learning curve. </div>
+<div align="center"> Fast & Effortless state management for React, Preact and Inferno with zero learning curve. </div>
 <br />
 
 ## Table of Contents
