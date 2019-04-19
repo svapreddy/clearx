@@ -7,6 +7,7 @@ let appStore = new ClearX({
     'title': 'example glossary',
     'GlossDiv': {
       'title': 'S',
+      'title2': 'S',
       'GlossList': {
         'GlossEntry': {
           'test': 'test',
@@ -26,7 +27,48 @@ let appStore = new ClearX({
   }
 })
 
-test('#React UI component', (t) => {
+test('#React UI component - Bind', (t) => {
+  let p = ['glossary', 'GlossDiv', 'GlossList', 'GlossEntry', 'test']
+  
+  let setStateCalled = false
+  let setState = () => {
+    setStateCalled = true
+  }
+  class Cls {
+    constructor () {
+      this.isReactComponent = true
+      this.sliced = appStore.bind({
+        paths: {
+          GlossEntryTest: p
+        },
+        to: this
+      })
+    }
+    setState (data, afterCb) {
+      this.state = data
+      setState()
+      afterCb && afterCb()
+    }
+  }
+  
+  let instance = new Cls()
+  t.deepEqual(appStore.get(p), instance.state.store.GlossEntryTest)
+  appStore.set(p, 'test2')
+  t.deepEqual(instance.state.store.GlossEntryTest, 'test2')
+  t.is(setStateCalled, true)
+  setStateCalled = false
+  appStore.set(p, 'test2')
+  t.is(setStateCalled, false)
+  instance.sliced.setState({
+    store: {
+      GlossEntryTest: 'test3'
+    }
+  })
+  t.is(setStateCalled, true)
+  t.deepEqual(appStore.get(p), 'test3')
+})
+
+test('#React UI component - Slice', (t) => {
   let p = ['glossary', 'GlossDiv', 'GlossList', 'GlossEntry', 'test']
   
   let setStateCalled = false
@@ -64,9 +106,40 @@ test('#React UI component', (t) => {
   t.deepEqual(appStore.get(p), 'test3')
 })
 
-test('#slice() with Class', (t) => {
+test('#bind() with Class', (t) => {
   let p = ['glossary', 'GlossDiv', 'GlossList', 'GlossEntry', 'GlossDef']
   let p2 = ['glossary', 'GlossDiv', 'title']
+  t.deepEqual(appStore.get(p2), 'S')
+  let called = false
+  class Cls {
+    constructor () {
+      appStore.bind({
+        paths: {
+          GlossDef: p,
+          GlossDivTitle: p2
+        },
+        to: this,
+        withDefaultData: {
+          GlossDivTitle: 'testTitle'
+        },
+        events: {
+          afterUpdate: () => {
+            called = true
+          }
+        }
+      })
+    }
+  }
+  let instance = new Cls()
+  t.deepEqual(instance.store.GlossDef, appStore.get(p))
+  t.deepEqual(appStore.get(p2), 'testTitle')
+  appStore.set(p2, 'another')
+  t.deepEqual(called, true)
+})
+
+test('#slice() with Class', (t) => {
+  let p = ['glossary', 'GlossDiv', 'GlossList', 'GlossEntry', 'GlossDef2']
+  let p2 = ['glossary', 'GlossDiv', 'title2']
   t.deepEqual(appStore.get(p2), 'S')
   let called = false
   class Cls {

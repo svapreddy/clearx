@@ -8,9 +8,12 @@ class TodoApp extends React.Component {
   constructor (props) {
     super(props)
     // Just this is doing the magic!
-    Store.slice({
-      todos: ['todos']
-    }, this)
+    Store.bind({
+      paths: {
+        todos: ['todos']
+      },
+      to: this
+    })
   }
   render () {
     let localStore = this.state.store

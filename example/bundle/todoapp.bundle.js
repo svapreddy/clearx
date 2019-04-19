@@ -444,7 +444,7 @@
 	  {
 	    module.exports = factory();
 	  }
-	})(commonjsGlobal, function() {
+	})(commonjsGlobal, function(){
 
 	  var toStr = Object.prototype.toString;
 	  function hasOwnProperty(obj, prop) {
@@ -924,27 +924,24 @@
 	  this.listeners = {};
 	};
 
-	var Slice = function Slice (map, context, config, store, handler) {
-	  if ( config === void 0 ) config = {};
-
+	var Slice = function Slice (options, store, handler) {
 	  this.id = store.nextId;
 	  this.storeConfig.apply(this, arguments);
 	  this.bootstrap();
 	};
 
 	var prototypeAccessors = { slice: { configurable: true },clone: { configurable: true } };
-	Slice.prototype.storeConfig = function storeConfig (map, context, config, store, handler) {
-	    if ( config === void 0 ) config = {};
-
+	Slice.prototype.storeConfig = function storeConfig (options, store, handler) {
+	  var events = options.events || {};
 	  this.store = store;
 	  this.handler = handler;
-	  this.map = map;
-	  this.context = context;
-	  this.updateCallback = config.updateCallback || (function (data) {});
-	  this.defaults = config.defaults || {};
-	  this.reactLike = config.reactLike;
+	  this.map = options.paths;
+	  this.targetObj = options.to;
+	  this.updateCallback = events.afterUpdate || (function (data) {});
+	  this.defaults = options.withDefaultData || {};
+	  this.reactLike = options.isReactFamilyUIComponent;
 	  if (this.reactLike === undefined) {
-	    this.reactLike = this.isReactLike(context) || false;
+	    this.reactLike = this.isReactLike(this.targetObj) || false;
 	  }
 	};
 	Slice.prototype.isReactLike = function isReactLike (instance) {
@@ -963,19 +960,19 @@
 	};
 	Slice.prototype.componentWillUnmount = function componentWillUnmount () {
 	  if (!this.reactLike) { return }
-	  this.destroy();
 	  // Call original handler that view has!
 	  if (this.orig_componentWillUnmount) {
-	    this.orig_componentWillUnmount.apply(this.context, arguments);
+	    this.orig_componentWillUnmount.apply(this.targetObj, arguments);
 	  }
+	  this.destroy();
 	};
 	Slice.prototype.revokeComponentWillUnmountHook = function revokeComponentWillUnmountHook () {
 	  if (!this.reactLike) { return }
-	  this.context.componentWillUnmount = this.orig_componentWillUnmount;
+	  this.targetObj.componentWillUnmount = this.orig_componentWillUnmount;
 	};
 	Slice.prototype.addComponentWillUnmountHook = function addComponentWillUnmountHook () {
 	  if (!this.reactLike) { return }
-	  var context = this.context;
+	  var context = this.targetObj;
 	  var eventName = 'componentWillUnmount';
 	  if (context[eventName]) {
 	    this.orig_componentWillUnmount = context[eventName];
@@ -1005,7 +1002,7 @@
 	  return !fastDeepEqual(store, data)
 	};
 	Slice.prototype._assignState = function _assignState () {
-	  var context = this.context;
+	  var context = this.targetObj;
 	  var initialData = this.slice;
 	  if (this.reactLike) {
 	    context.state = context.state || {};
@@ -1015,10 +1012,10 @@
 	  }
 	};
 	Slice.prototype._updateState = function _updateState () {
-	  var context = this.context;
+	  var context = this.targetObj;
 	  var newData = this.slice;
 	  if (this.reactLike) {
-	    this.context.setState({
+	    this.targetObj.setState({
 	      store: newData
 	    });
 	  } else {
@@ -1031,7 +1028,7 @@
 	Slice.prototype.setState = function setState (data, afterCb) {
 	    var this$1 = this;
 
-	  var context = this.context;
+	  var context = this.targetObj;
 	  if (this.reactLike) {
 	    if (typeof data === 'function') {
 	      context.setState(function (state) {
@@ -1046,7 +1043,9 @@
 	        if (data.store) {
 	          this$1.slice = data.store;
 	        }
-	        afterCb();
+	        if (typeof afterCb === 'function') {
+	          afterCb();
+	        }
 	      });
 	    }
 	  } else {
@@ -1066,7 +1065,7 @@
 	  this.removeListen();
 	  this.revokeComponentWillUnmountHook();
 	  this.map = null;
-	  this.context = null;
+	  this.targetObj = null;
 	  this.defaults = null;
 	  this.store = null;
 	  this.handler = null;
@@ -1155,8 +1154,10 @@
 	  this.handler.changed([key]);
 	};
 	// push into arrays (and create intermediate objects/arrays)
-	Store.prototype.push = function push (key, value) {
-	  objectPath.push(this.data, key, value);
+	Store.prototype.push = function push (key /*, values */) {
+	  var args = [this.data, key];
+	  args.push.apply(args, Array.prototype.slice.call(arguments, 1));
+	  objectPath.push.apply(objectPath, args);
 	  this.handler.changed([key]);
 	};
 	// ensure a path exists (if it doesn't, set the default value you provide)
@@ -1185,7 +1186,23 @@
 	};
 	// For React components: Extracts the data from the store. This slice will be in sync with the initial global data set
 	Store.prototype.slice = function slice (map, context, config) {
-	  var instance = new Slice(map, context, config, this, this.handler);
+	    if ( config === void 0 ) config = {};
+
+	  var options = {
+	    to: context,
+	    paths: map,
+	    withDefaultData: config.defaults,
+	    events: {
+	      afterUpdate: config.updateCallback
+	    },
+	    isReactFamilyUIComponent: config.reactLike
+	  };
+	  return this.bind(options)
+	};
+	Store.prototype.bind = function bind (options) {
+	    if ( options === void 0 ) options = {};
+
+	  var instance = new Slice(options, this, this.handler);
 	  this.slicers[instance.id] = instance;
 	  return this.slicers[instance.id]
 	};
@@ -1326,9 +1343,12 @@
 	  function TodoList (props) {
 	    superclass.call(this, props);
 	    // Just this is doing the magic!
-	    Store$1.slice({
-	      todos: ['todos']
-	    }, this);
+	    Store$1.bind({
+	      paths: {
+	        todos: ['todos']
+	      },
+	      to: this
+	    });
 	  }
 
 	  if ( superclass ) TodoList.__proto__ = superclass;
@@ -1356,9 +1376,12 @@
 	  function TodoApp (props) {
 	    superclass.call(this, props);
 	    // Just this is doing the magic!
-	    Store$1.slice({
-	      todos: ['todos']
-	    }, this);
+	    Store$1.bind({
+	      paths: {
+	        todos: ['todos']
+	      },
+	      to: this
+	    });
 	  }
 
 	  if ( superclass ) TodoApp.__proto__ = superclass;

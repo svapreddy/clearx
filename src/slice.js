@@ -3,21 +3,22 @@ import equal from 'fast-deep-equal'
 import deepmerge from 'deepmerge'
 
 export default class Slice {
-  constructor (map, context, config = {}, store, handler) {
+  constructor (options, store, handler) {
     this.id = store.nextId
     this.storeConfig.apply(this, arguments)
     this.bootstrap()
   }
-  storeConfig (map, context, config = {}, store, handler) {
+  storeConfig (options, store, handler) {
+    let events = options.events || {}
     this.store = store
     this.handler = handler
-    this.map = map
-    this.targetObj = context
-    this.updateCallback = config.updateCallback || ((data) => {})
-    this.defaults = config.defaults || {}
-    this.reactLike = config.reactLike
+    this.map = options.paths
+    this.targetObj = options.to
+    this.updateCallback = events.afterUpdate || ((data) => {})
+    this.defaults = options.withDefaultData || {}
+    this.reactLike = options.isReactFamilyUIComponent
     if (this.reactLike === undefined) {
-      this.reactLike = this.isReactLike(context) || false
+      this.reactLike = this.isReactLike(this.targetObj) || false
     }
   }
   isReactLike (instance) {

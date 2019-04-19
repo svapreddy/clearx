@@ -83,8 +83,20 @@ export default class Store {
     this.set(key, deepmerge(old, data))
   }
   // For React components: Extracts the data from the store. This slice will be in sync with the initial global data set
-  slice (map, context, config) {
-    let instance = new Slice(map, context, config, this, this.handler)
+  slice (map, context, config = {}) {
+    let options = {
+      to: context,
+      paths: map,
+      withDefaultData: config.defaults,
+      events: {
+        afterUpdate: config.updateCallback
+      },
+      isReactFamilyUIComponent: config.reactLike
+    }
+    return this.bind(options)
+  }
+  bind (options = {}) {
+    let instance = new Slice(options, this, this.handler)
     this.slicers[instance.id] = instance
     return this.slicers[instance.id]
   }

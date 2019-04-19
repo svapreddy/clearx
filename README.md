@@ -5,45 +5,61 @@
 ## Table of Contents
 - [Introduction](#introduction)
 - [How ClearX works](#how-clearx-works)
+- [Philosophy](#philosophy)
 - [Usage](#usage)
 - [Todo example & Comparison](#example-todo-implementation-using-react-and-clearx)
-- [Differences with MobX](#differences-with-mobx)
 - [API](#api)
 - [Compatibility](#compatibility)
  
 #### Introduction: 
 
-`ClearX` provides a painless way to manage the state for Frontend application. Check this [link](https://codesandbox.io/embed/v6ln04730?fontsize=14) for a basic Todo App demo or checkout Todo example section
+`ClearX` provides an alternative & very simple way to manage the global state for the Frontend application. Check this [link](https://codesandbox.io/embed/v6ln04730?fontsize=14) for a basic Todo App demo or check out Todo example section
 
 ###### Advantages:
 
 - Insanely simple to use. Fast & small (3kb)
-- Re-render UI components only when dependent data is changed in Store
-- Store can be accessed, changed from anywhere in an application using very simple API
-- Store is a plain reactive JS Object. ZERO learning curve! ClearX API is highly predictable and synchronous
-- Works very well with dynamic properties
+- Re-renders UI components only when dependent data is changed in Store
+- The store can be accessed, changed from anywhere in an application using an expressive API
+- The store is a plain reactive JS Object. ClearX API is highly predictable and synchronous.
+- No limitations for adding new properties to the existing store after creation
 - Local state and global store can be used together. No restrictions
-- No Boilerplate code. No need of declaring data consumers and providers through UI components. No need of Decorators
-- No limit on number of stores. Store data is reversible & cloneable
-- Makes it easy to work with 3rd party libraries that have no react flavor in them
+- No Boilerplate code. No need for declaring data consumers and providers through UI components. No need of Decorators
+- No limit on the number of stores. Store data is reversible & cloneable
+- Makes it easy to work with 3rd party libraries that have no react flavour in them
 - Helps to write tree-shaking friendly codebase.
-- Helps effective seperation of concerns
-- Developer and Code friendly alternative to Redux, React's Context API & MobX. Application code will never become complex due to State management
-- Compatible with React, Preact, and Inferno without any configurational changes. Works with other UI libraries with minimal configuration
+- Helps effective separation of concerns
+- Developer and Code friendly alternative Global State Management. 
+- Simple. Avoids complexity around state management
+- Compatible with React, Preact, and Inferno without any configurational changes.
 
-For example, This is how we can slice and attach a store to a UI component  
+It's this simple:
 
 ```javascript
-Store.slice({
-  fileOne: ['data', 'files', 'file1']
-}, this)
+Store.bind({
+  paths: {
+    fileOne: ['file', 'one']
+  },
+  to: this
+})
 ```
+
+Note: Earlier versions used `slice` method. It will work without any problem. But the bind method is recommended. For usage of slice method please check tests.
 
 ###### How `ClearX` works:
 
-Create a global application store with application's data structure. This can be accessed, changed, plugged and sliced from anywhere in an application. Now create slices from the application store and plug it anywhere in application. Each slice keeps itself in sync with the application store and updates the view or class with changes. If the slice is attached to a React component, it updates the state with the latest data from the application store which internally triggers the rerender process of UI component. All this happens with very simple API calls.
+The initial step in ClearX is creating an application data structure and creating a ClearX data store instance. Data attached to this instance can be accessed & modified from anywhere in the application including UI components that share React UI component structure.
 
-When we create an application store with `ClearX`, it provides a simple and rich API to operate on data. With API we can change the data, slice and plug the data anywhere in an application. Each slice keeps itself in sync with the application store and updates the view or class with changes. If the slice is attached to a React, Preact or Inferno UI component, it updates the state with the latest data from the application store which internally triggers the rerender process of UI component. When state changes in UI component, `ClearX` will NOT update the global application store. Instead it provides two choices. Update application store directly or use setState method of a slice which works exactly as React's setState method. When we update data on slice directly, the library internally checks what data has changed and other slices get updated only if there is a data change.
+ClearX provides a way to slice parts of data from the store and use it. This slice can be plugged to UI components. The slice keeps itself in sync with the latest data from the data store. When data is changed, the slice will trigger the UI component's re-render process and calls the afterUpdate callback.
+
+Data store provides an expressive API to modify the data in the store.
+
+###### Philosophy:
+
+UI represents complex business-related operations of an application using a visual layer. UI layer often goes through a lot of iterations and sometimes requires to refactor in an Agile development environment. Also, the JavaScript community is active in adopting new standards, having the flexibility to refactor UI layer without impacting underlying application architecture helps to maintain large codebase in the long run. Often application architecture is highly influenced by the application needs. ClearX is an attempt is to help in this process. 
+
+Global State Management is the spine part of an application & deserve to be simple for the long run. If we keep it simple to understand for Developers, it helps to maintain the application performance and quality of the application. ClearX attempt to help in this area by utilizing plain JavaScript concepts.
+
+Transpilation is used heavily in Frontend development, which often results in huge amounts of code. ClearX attempt to help in this context. The [idle-until-urgent](https://philipwalton.com/articles/idle-until-urgent/) also influenced parts of ClearX decision making process.
 
 #### Usage:
 
@@ -58,7 +74,7 @@ npm install clearx --save
 ```javascript
 import ClearX from `clearx`
 
-// Plain JS Object which represents application data structure. All properties no need to be known at creation time
+// Application data structure.
 let ApplicationData = {
   user: {
     signedIn: false
@@ -84,7 +100,7 @@ export default appStore
 
 ```
 
-##### Slicing and Attaching the application store to a UI Component
+##### Slicing and Attaching the data store to a UI Component
 
 ```javascript
 import React, { Component } from 'react'
@@ -92,26 +108,41 @@ import React, { Component } from 'react'
 // Import application store
 import appStore from './src/storeFile.js'
 
-// It can be a class or function. ClearX works with all.
+// It can be a class or a function. ClearX works with all.
 class MyView extends Component {
   constructor (props) {
     super(props)
-    // UI Component can have a local state.
+    // UI Component can have a local state. Optional step!
     this.state = {
       localState1: 'test'
     }
-    
-    // Now, lets access fileOne from appStore and attach to the UI component. Below is all we need to do
-    // Note 1: ClearX uses array pattern to to play safe with special characters like `.`. ['data', 'files', 'file1'] is equal to `data.files.file1`
-    // Note 2: Non existent keys can be used. But data will be available when the data at the location is created and available.
-    // Note 3: slice will be destroyed automatically with UI component
-    
-    appStore.slice({
-      fileOne: ['data', 'files', 'file1']
-    }, this)
-    
-    // The slice method above will make the data is available inside state Object's store property
+    appStore.bind({
+      paths: {
+        // Non existent keys can be used. ClearX automatically updates components when data is available.
+        // Array format over 'data.files.file1' guards against unexpected . in keypath
+        fileOne: ['data', 'files', 'file1']
+      },
+      to: this,
+      // Optional. Sets the default data for above paths.
+      withDefaultData: {
+        fileOne: {
+          name: 'FileOne.txt'
+        }
+      },
+      // Optional events
+      events: {
+        // Called after data is updated.
+        afterUpdate: this.afterUpdate.bind(this)
+      },
+      // Optional. Automatically detected for React family UI components
+      isReactFamilyUIComponent: true
+    })
+    // Data bound is automatically destroyed.
+    // Expected: { localState1: 'test', store: { fileOne: <data from path> }}
     console.log(this.state.store)
+  }
+  afterUpdate (data) {
+    console.log('State updated', data)
   }
   render () {
     // Note: Always `this.state.store`
@@ -124,18 +155,22 @@ class MyView extends Component {
 
 ```
 
-##### Slicing and attaching the application store to a class which is not a UI component
+##### Slicing and attaching the data store to a plain class
 
 ```javascript
+
 import appStore from './src/storeFile.js'
 
 class Account {
   constructor () {
-    this.sliced = appStore.slice({
-      signedIn: ['user', 'signedIn']
-    }, this, {
-      // Events can be listened using `updateCallback` option. Example usecase: Fetch initial data when user is signedIn.
-      updateCallback: this.checkData.bind(this)
+    this.sliced = appStore.bind({
+      paths: {
+        signedIn: ['user', 'signedIn']
+      },
+      to: this,
+      events: {
+        afterUpdate: this.checkData.bind(this)
+      }
     })
     // If not react component, the location for sliced data is `this.store`
     console.log(this.store)
@@ -146,7 +181,7 @@ class Account {
     }
   }
   destroy () {
-    // Note: Slice below is not destroyed automatically. We need to call .destroy() on a slice to destroy manually.
+    // Need manual destroy for non UI components
     this.sliced.destroy()
   }
 }
@@ -154,17 +189,21 @@ class Account {
 export default Account
 ```
 
-##### Slicing and attaching the application store to a plain JavaScript Object
+##### Slicing and attaching the data store to a plain JavaScript Object
 
 ```javascript
 import appStore from './src/storeFile.js'
 
 let data = {}
 
-appStore.slice({
-  fileTwo: ['data', 'files', 'file2']
-}, data, {
-  updateCallback: checkData
+appStore.bind({
+  paths: {
+    fileTwo: ['data', 'files', 'file2']
+  },
+  to: this,
+  events: {
+    afterUpdate: checkData
+  }
 })
 
 let checkData = () => {
@@ -198,18 +237,21 @@ class MyCls {
 export default MyCls
 ```
 
-##### Revert data example
+##### Data reversal example
 
-For example, we are doing some server operation and would like to revert data if server call fails. Do it in this way:
+Data revert example:
 
 ```javascript
 import appStore from './src/storeFile.js'
 
 class MyCls {
   constructor () {
-    this.sliceInstance = appStore.slice({
-      fileTwo_Name: ['data', 'files', 'file2', 'name']
-    }, this)
+    this.sliceInstance = appStore.bind({
+      paths: {
+        fileTwo_Name: ['data', 'files', 'file2', 'name']
+      },
+      to: this
+    })
     this.postName()
   }
   checkData () {
@@ -240,60 +282,80 @@ Please run:
   $ npm run todo 
 ```
 
-Now go to http://localhost:8719/ to access todo application. Source is available under `./example` folder.
-
-Compare the code with [Redux version of Todo](https://redux.js.org/basics/example) and [MobX version of Todo](https://github.com/mobxjs/mobx-react-todomvc)
-
-### Differences with MobX
-
-While MobX is providing similar functionality using different syntax and has much larger scope. ClearX focus is on providing a barebones reactive store that does the Job using simple API. 
-
-Here are few differences:  
-
-- All the existing and dynamic data in store is observable by the default. No need to explicitly make any property observable. ClearX operates on plain JS Object
-- ClearX does not depend on creating setters on properties to watch data changes. Using them on large number of properties has some performance penalty in performance critical applications
-- ClearX has zero learning curve.
-- The application code that used ClearX remains same even after transpilation. No extra code code overhead
-- ClearX has very minimal API. Chances of running into a problem are very little
-- ClearX has no browser specific limitations. It works in all the modern browsers and consistently fast across the browsers
-- All the data changes to Store happens through proxy like API. There are almost no cases where the data is updated and ClearX is unable to catch them and update the UI
-- ClearX size is 3KB. MobX size is around 14KB
-
-Although optional in MobX,  
-- ClearX uses slice over Static properties in MobX. Using Static properties adds more code overhead during transpilation.
-- ClearX does not use Decorators. Using Decorators adds more code overhead during transpilation.
+Now go to http://localhost:8719/ to access todo application. The source is available under `./example` folder.
 
 ### API:
 
-The ClearX instance contains below API:
+The ClearX instance has below API:
 
-#### <code>slice</code>:  
-Get a slice of data from the application store  
+#### <code>bind</code>:  
+Bind slice of data store to a Class or an Object or a UI component
+
+#### <code>bind</code>:  
+Get a slice of data from the store & attach.
+
+```javascript
+let sliceInstance = appStore.bind({
+  // Key map
+  paths: {
+    fileOne: ['data', 'files', 'file1']
+  },
+  // Context
+  to: this,
+  // Default data to set in data store
+  withDefaultData: {
+    fileOne: 'my default filename.txt'
+  },
+  // Optional events
+  events: {
+    afterUpdate: function(data) {
+      console.log('After store data is updated: ', data)
+    }
+  },
+  // Optional. Automatically detected for React like components
+  isReactFamilyUIComponent: true
+})
+console.log(sliceInstance.slice) // Data slice
+sliceInstance.destroy() // Destroy slice
+console.log(sliceInstance.clone) // Data slice clone
+sliceInstance.slice = {} // Compares and replace the data in data store
+```
+
+#### <code>slice (obsolete. Use bind)</code>:  
+Get a slice of data from the store & attach
 *`map:`*   
-A map to application store data with keys we are interested in. Look at the example above for the format. The path must be an array of keys. In above example ['data', 'files', 'file1'] is equal to `data.files.file1` but ClearX promotes array format to avoid conflicting with `.` in keys in data.
+Keys map. The path must be an array of keys. In above example ['data', 'files', 'file1'] is equal to `data.files.file1` but ClearX promotes array format to avoid conflicting with `.` in keys in data.
 
 *`context:`*   
-The instance where the returned slice is bound to. It can be React component or a plain class. slice internally checks if it is a react component and flows the data from the root store to component's state. The data will be available on `this.state.store`. If the context is a plain class, the data is synced to `this.store`. `store` is the namespace that slice uses. The context can be a preact or inferno component. slice looks for `setState` and `render` methods OR isReactComponent key on context to determine if it is a react like component. This makes compatible slice compatible with Preact and Inferno.
+The instance where the returned slice is bound to.
 
 *`config:`*   
-The config can contain, `defaults` object, `updateCallback` function, `reactLike` boolean value. defaults is for setting the default data into the root store on initializing. For example, if we have a React component/plain class that receives router params and that need to be set to the root store, we can use defaults. defaults example is `{fileOne: 'my default filename.txt'}`. In this example, slice looks for `fileOne` key in map and updates that location. `updateCallback` is used to know when data is updated in local store slice. For React component, it is not much use as render method is already called, but for plain classes, we can use this to listen for the data changes and do some operations. Lastly `reactLike` can be provided. Even not provided, `slice` internally checks if it's react like component.
+Optional config can contain, `defaults` object, `updateCallback` function, `reactLike` boolean value.
   
 ```javascript
 // we do not need to store the sliceInstance if we don't have to call any methods on slice instance
-let sliceInstance = appStore.slice(/* map */{
-  fileOne: ['data', 'files', 'file1']
-}, /* context */ this, /* config */ {
-  defaults: {
-    // keys of data should match the map keys. Otherwise ignored.
-    fileOne: 'my default filename.txt'
-  },
-  updateCallback: {}
-})
-// sliceInstance.setState, calls component's setState internally if available and also updates application store
-// sliceInstance.slice for the store data
-// sliceInstance.destroy to destroy the slice
-// sliceInstance.slice = data, internally compares and updates the values directly in application store. Has the same effect as above setState above. Useful from plain classes. But keys of data should match the map keys. Otherwise ignored.
-// let old = sliceInstance.clone, clones the slice data. When we are making some AJAX call, if the call has failed, we can assign old value back to slice instance with `sliceInstance.slice = old`. Library internally checks which data is changed and updates other slices accordingly.
+let sliceInstance = appStore.slice(
+  /* Keys map */
+  {
+    fileOne: ['data', 'files', 'file1']
+  }, 
+  /* context */ 
+  this, 
+  /* config */ 
+  {
+      // Default data to set in data store
+      defaults: {
+        fileOne: 'my default filename.txt'
+      },
+      // After data update event.
+      updateCallback: {}
+  }
+)
+
+console.log(sliceInstance.slice) // Data slice
+sliceInstance.destroy() // Destroy slice
+console.log(sliceInstance.clone) // Data slice clone
+sliceInstance.slice = {} // Compares and replace the data in data store
 ```
 
 #### <code>destroy</code>:   
@@ -314,7 +376,7 @@ Get the root store data.
 appStore.data
 ```
 
-> Remaining APIs below are adopted from [object-path](https://www.npmjs.com/package/object-path). It is an excellent library for operating on data. We can also check the documentation at this location. Except that we will not pass the data and key paths are always in key format. Methods from `object-path` are wrapped and exposed through store instance to trigger root store updates on data changes. `merge` method uses [deepmerge](https://www.npmjs.com/package/deepmerge)
+> Remaining APIs below are adapted from [object-path](https://www.npmjs.com/package/object-path). It is an excellent library for operating on data. We can also check the documentation at this location. Except that we will not pass the data and key paths are always in key format. Methods from `object-path` are wrapped and exposed through store instance to trigger root store updates on data changes. `merge` method uses [deepmerge](https://www.npmjs.com/package/deepmerge)
 
 #### <code>get</code>:   
 
@@ -328,7 +390,7 @@ appStore.get(["data", "files", "fileOne"])
 appStore.get(["a", "c", "1"])
 
 // Can return a default value with get. Note: Does not update the root store with default value
-appStore.get(["a", "c", "b"], "DEFAULT");  // returns "DEFAULT", since ["a", "c", "b"] path doesn't exists, if omitted, returns undefined
+appStore.get(["a", "c", "b"], "DEFAULT")  // returns "DEFAULT", since ["a", "c", "b"] path doesn't exists, if omitted, returns undefined
 ```
 
 #### <code>set</code>:  
@@ -336,19 +398,19 @@ Set a value at given path. Triggers root store updates if new value is different
 
 ```javascript
 appStore.set(["a", "h"], "m")
-appStore.get(["a", "h"]);  //returns "m"
+appStore.get(["a", "h"])  //returns "m"
 // set will create intermediate object/arrays
 appStore.set(["a", "j", 0, "f"], "m")
 ```
 
 #### <code>empty</code>:  
 empty a given path (but do not delete it) depending on their type, so it retains a reference to objects and arrays.
-functions that are not inherited from prototype are set to null. object instances are considered objects and just own property names are deleted. Triggers root store updates
+functions that are not inherited from the prototype are set to null. object instances are considered objects and just own property names are deleted. Triggers root store updates
 
 ```javascript
-appStore.empty(['a', 'b']); // ['a', 'b'] is now ''
-appStore.empty(['a', 'c']); // ['a', 'c'] is now []
-appStore.empty(['a']); // ['a'] is now {}
+appStore.empty(['a', 'b']) // ['a', 'b'] is now ''
+appStore.empty(['a', 'c']) // ['a', 'c'] is now []
+appStore.empty(['a']) // ['a'] is now {}
 ```
 
 #### <code>del</code>:  
@@ -363,7 +425,7 @@ appStore.del(["a", "c", 0]) // Root store value at ["a", "c"]is now ['f']
 Insert values in array. Triggers root store updates
 
 ```javascript
-appStore.insert(["a", "c"], "m", 1); // Data at ["a", "c"] will be ["e", "m", "f"]
+appStore.insert(["a", "c"], "m", 1) // Data at ["a", "c"] will be ["e", "m", "f"]
 ```
  
 #### <code>push</code>:  
@@ -404,7 +466,7 @@ appStore.coalesce(obj, [ ["data", "files", "fileOne"], ["data", "files", "fileTw
 ```
 
 ### Compatibility:
-During development `ClearX` was tested with React and plain classes. `ClearX` will work with libraries like Preact, Inferno with no extra configuration considering they provide `setState` method and `componentWillUnmount` hook. To use ClearX with other UI libraries, please add a `setState` function on component to receive the updated data. Also call `destroy()` method before UI component is unmounted.
+During development `ClearX` was tested with React and plain classes. `ClearX` will work with libraries like Preact, Inferno with no extra configuration considering they provide `setState` method and `componentWillUnmount` hook. To use ClearX with other UI libraries, please add a `setState` function on the component to receive the updated data. Also, call `destroy()` method before the UI component is unmounted.
 
 ### Contributing:
 
