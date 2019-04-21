@@ -289,9 +289,6 @@ Now go to http://localhost:8719/ to access todo application. The source is avail
 The ClearX instance has below API:
 
 #### <code>bind</code>:  
-Bind slice of data store to a Class or an Object or a UI component
-
-#### <code>bind</code>:  
 Get a slice of data from the store & attach.
 
 ```javascript
