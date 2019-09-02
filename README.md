@@ -1,5 +1,5 @@
 <h1 align="center">ClearX</h1>
-<div align="center"> Fast & Effortless global state management for React, Preact and Inferno with zero learning curve. </div>
+<div align="center"> Simple global state management for React, Preact and Inferno. </div>
 <br />
 
 ## Table of Contents
@@ -20,16 +20,11 @@
 - Insanely simple to use. Fast & small (3kb)
 - Re-renders UI components only when dependent data is changed in Store
 - The store can be accessed, changed from anywhere in an application using an expressive API
-- The store is a plain reactive JS Object. ClearX API is highly predictable and synchronous.
+- The store is a plain reactive JS Object.
 - No limitations for adding new properties to the existing store after creation
-- Local state and global store can be used together. No restrictions
-- No Boilerplate code. No need for declaring data consumers and providers through UI components. No need of Decorators
-- No limit on the number of stores. Store data is reversible & cloneable
+- Local state and global store can be used together. No restrictions. No limit on the number of stores. Store data is reversible & cloneable
 - Makes it easy to work with 3rd party libraries that have no react flavour in them
 - Helps to write tree-shaking friendly codebase.
-- Helps effective separation of concerns
-- Developer and Code friendly alternative Global State Management. 
-- Simple. Avoids complexity around state management
 - Compatible with React, Preact, and Inferno without any configurational changes.
 
 It's this simple:
@@ -55,11 +50,7 @@ Data store provides an expressive API to modify the data in the store.
 
 ###### Philosophy:
 
-UI represents complex business-related operations of an application using a visual layer. UI layer often goes through a lot of iterations and sometimes requires to refactor in an Agile development environment. Also, the JavaScript community is active in adopting new standards, having the flexibility to refactor UI layer without impacting underlying application architecture helps to maintain large codebase in the long run. Often application architecture is highly influenced by the application needs. ClearX is an attempt is to help in this process. 
-
-Global State Management is the spine part of an application & deserve to be simple for the long run. If we keep it simple to understand for Developers, it helps to maintain the application performance and quality of the application. ClearX attempt to help in this area by utilizing plain JavaScript concepts.
-
-Transpilation is used heavily in Frontend development, which often results in huge amounts of code. ClearX attempt to help in this context. The [idle-until-urgent](https://philipwalton.com/articles/idle-until-urgent/) also influenced parts of ClearX decision making process.
+UI represents complex business-related operations of an application using a visual layer. UI layer often goes through a lot of iterations and sometimes requires to refactor in an Agile development environment. Global State Management is the spine part of an application & deserve to be simple for the long run. If we keep it simple to understand for Developers, it helps to maintain the application performance and quality of the application.
 
 #### Usage:
 
