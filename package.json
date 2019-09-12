@@ -40,15 +40,19 @@
     "rollup-plugin-buble": "^0.19.6",
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-filesize": "^6.0.0",
-    "rollup-plugin-license": "^0.8.0",
+    "rollup-plugin-license": "^0.12.1",
     "rollup-plugin-node-resolve": "^4.0.0",
     "rollup-plugin-replace": "^2.1.0",
     "rollup-plugin-serve": "^1.0.0",
     "rollup-plugin-standard": "^1.0.0",
-    "rollup-plugin-uglify": "^6.0.1"
+    "rollup-plugin-typescript2": "^0.24.1",
+    "rollup-plugin-uglify": "^6.0.1",
+    "typescript": "^3.6.3"
   },
   "dependencies": {
+    "@types/ramda": "^0.26.21",
     "deepmerge": "^3.1.0",
+    "dot-prop": "^5.1.0",
     "fast-deep-equal": "^2.0.1",
     "object-path": "^0.11.4"
   },
