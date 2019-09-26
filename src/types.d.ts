@@ -16,11 +16,12 @@ type target = {
     componentWillUnmount?: Function
 }
 
-export interface options {
-    events?: events
+export interface segmentOptions {
     to: target
-    withDefaultData?: withDefaultData
     paths: paths
+    events?: events
+    withDefaultData?: withDefaultData,
+    keySeperator: string
 }
 
 export enum arrayMethods {
@@ -30,4 +31,33 @@ export enum arrayMethods {
     shift,
     unshift,
     sort
+}
+
+export interface SegmentIF {
+    active: boolean
+    data: object,
+    isBoundToReactComponent: boolean
+}
+
+export interface ClearXIF {
+    get(key: keypath, defaultValue: any): any
+    set(key: keypath, value: any, doNotReplace: boolean): boolean
+    coalesce(keys: keypath[], defaultValue: any): any
+    empty(key: keypath): boolean
+    insert(key: keypath, value: any, position: number): any
+    push(key: keypath, ...values: any[]): any
+    unshift(key: keypath, ...values: any[]): any
+    pop(key: keypath): any
+    shift(key: keypath): any
+    splice(key: keypath, ...args: any[]): any
+    ensureExists(key: keypath, defaultValue: any): boolean
+    delete(key: keypath): boolean
+    has(key: keypath): boolean
+    merge(key: keypath, data: object): boolean
+    bind(options: segmentOptions): SegmentIF
+    destroy(): void
+}
+
+export interface clearxOptions {
+    keySeperator?: string
 }

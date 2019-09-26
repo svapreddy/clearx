@@ -1,21 +1,24 @@
 import { isReactFamilyComponent } from './utils'
-import { options, keypath } from './types'
+import { segmentOptions, keypath, SegmentIF, ClearXIF, paths, clearxOptions } from './types'
 import { get, set, coalesce, empty, insert, push, pop, shift, splice, ensureExists, del, has, merge } from './object-utils'
+import split from 'ramda/es/split'
 
-class Handler {
+class DataObserver {
     constructor() { }
     attachObserver(keys: keypath[]): void { }
     detachObserver(segment: Segment): void { }
+    destroy(): void { }
 }
 
-class Segment {
+class Segment implements SegmentIF {
 
     public readonly isBoundToReactComponent: boolean
     public readonly active: boolean
     private componentWillUnmount: any
     private detachListeners: Function = () => { }
+    private keySeperator: string = "."
 
-    constructor(private config: options, private store: Clearx, private handler: Handler) {
+    constructor(private config: segmentOptions, private store: Clearx, private dataObserver: DataObserver) {
         this.isBoundToReactComponent = isReactFamilyComponent(config.to)
         this.bootstrap()
         this.active = true
@@ -32,14 +35,14 @@ class Segment {
 
     private normalizePaths(): void {
         let listeningKeys: keypath[] = []
-        let paths = this.config.paths
+        let paths: paths = this.config.paths
         for (const key in paths) {
-            let path = paths[key]
-            if (!path) continue
-            if (typeof path === 'string') {
-                path = getPathSegments(path)
+            if (paths.hasOwnProperty(key)) {
+                let path = paths[key]
+                if (!path) continue
+                path = split()
+                paths[key] = path
             }
-            paths[key] = path
         }
     }
 
@@ -49,10 +52,10 @@ class Segment {
         for (const key in paths) {
             listeningKeys[listeningKeys.length] = paths[key]
         }
-        this.handler.attachObserver(listeningKeys)
+        this.dataObserver.attachObserver(listeningKeys)
 
         return () => {
-            this.handler.detachObserver(this)
+            this.dataObserver.detachObserver(this)
         }
     }
 
@@ -100,9 +103,14 @@ class Segment {
     }
 }
 
-class Clearx {
+class Clearx implements ClearXIF {
     public readonly segments: Segment[] = []
-    constructor(public readonly data: object) { }
+    private readonly dataObserver: DataObserver
+    private readonly keySeperator: string
+    constructor(public data: object, { keySeperator = "." }: clearxOptions) {
+        this.dataObserver = new DataObserver()
+        this.keySeperator = keySeperator
+    }
     public get(key: keypath, defaultValue: any): any {
         return get(this.data, key, defaultValue)
     }
@@ -145,127 +153,19 @@ class Clearx {
     public merge(key: keypath, data: object): boolean {
         return merge(this.data, key, data)
     }
-    public bind(): Segment {
-        const opts: options = {
-            to: {},
-            paths: {}
-        }
-        const segment = new Segment(opts, this, new Handler())
+    public bind(options: segmentOptions): Segment {
+        const segment: Segment = new Segment({
+            keySeperator: this.keySeperator
+            ...options
+        }, this, this.dataObserver)
+        this.segments.push(segment)
         return segment
     }
-    public destroy() { }
+    public destroy() {
+        this.segments.forEach((segment: Segment) => {
+            segment.destroy()
+        })
+        this.dataObserver.destroy()
+        this.data = {}
+    }
 }
-
-
-// import objectpath from 'object-path'
-// import deepmerge from 'deepmerge'
-// import equal from 'fast-deep-equal'
-
-// import Handler from './handler'
-// import Slice from './slice'
-
-// let dataCollection = {}
-
-// export default class Store {
-//   constructor (data) {
-//     this.count = 0
-//     this.id = this.nextId
-//     this.slicers = {}
-//     this.handler = new Handler(this)
-//     dataCollection[this.id] = data
-//   }
-//   get nextId () {
-//     this.count += 1
-//     return Date.now() + this.count + ''
-//   }
-//   get localStores () {
-//     return this.slicers
-//   }
-//   get data () {
-//     return dataCollection[this.id]
-//   }
-//   // set values
-//   set (key, value) {
-//     let old = this.get(key)
-//     // if has same value, do not set
-//     if (old && equal(old, value)) return
-//     objectpath.set(this.data, key, value)
-//     this.handler.changed([key])
-//   }
-//   // get deep property
-//   get (key, defaultValue) {
-//     return objectpath.get(this.data, key, defaultValue)
-//   }
-//   // get the first non-undefined value
-//   coalesce (keys, defaultValue) {
-//     return objectpath.coalesce(this.data, keys, defaultValue)
-//   }
-//   // empty a given path (but do not delete it) depending on their type,so it retains reference to objects and arrays.
-//   empty (key) {
-//     objectpath.empty(this.data, key)
-//     this.handler.changed([key])
-//   }
-//   // will insert values in array at given position
-//   insert (key, value, position) {
-//     objectpath.insert(this.data, key, value, position)
-//     this.handler.changed([key])
-//   }
-//   // push into arrays (and create intermediate objects/arrays)
-//   push (key /*, values */) {
-//     let args = [this.data, key]
-//     args.push.apply(args, Array.prototype.slice.call(arguments, 1))
-//     objectpath.push.apply(objectpath, args)
-//     this.handler.changed([key])
-//   }
-//   // ensure a path exists (if it doesn't, set the default value you provide)
-//   ensureExists (key, defaultValue) {
-//     let exists = this.has(key)
-//     if (!exists) {
-//       objectpath.ensureExists(this.data, key, defaultValue)
-//       this.handler.changed([key])
-//     }
-//   }
-//   // deletes a path
-//   del (key) {
-//     objectpath.del(this.data, key)
-//     this.handler.changed([key])
-//   }
-//   // tests path existence
-//   has (key) {
-//     return objectpath.has(this.data, key)
-//   }
-//   // Merge data from another Object
-//   merge (key, data, options) {
-//     if (!key || !data) return
-//     let old = this.get(key)
-//     if (equal(old, data)) return
-//     this.set(key, deepmerge(old, data))
-//   }
-//   // For React components: Extracts the data from the store. This slice will be in sync with the initial global data set
-//   slice (map, context, config = {}) {
-//     let options = {
-//       to: context,
-//       paths: map,
-//       withDefaultData: config.defaults,
-//       events: {
-//         afterUpdate: config.updateCallback
-//       },
-//       isReactFamilyUIComponent: config.reactLike
-//     }
-//     return this.bind(options)
-//   }
-//   bind (options = {}) {
-//     let instance = new Slice(options, this, this.handler)
-//     this.slicers[instance.id] = instance
-//     return this.slicers[instance.id]
-//   }
-//   destroy () {
-//     for (let id in this.slicers) {
-//       this.slicers[id].destroy()
-//     }
-//     this.handler.destroy()
-//     this.slicers = {}
-//     this.handler = null
-//     delete dataCollection[this.id]
-//   }
-// }
