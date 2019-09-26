@@ -58,11 +58,12 @@ var toNumber = (val) => {
     return val
 }
 
-var split = (path, seperator) => {
+var split = (path, seperator = ".") => {
+    if (!path) return []
+    if (Array.isArray(path)) return path
     let keys = []
     let key = ""
-    const escape = "\\"
-    for (let i = 0; i < path.length; i++) {
+    for (let i = 0, l = path.length; i < l; ++i) {
         let charKey = path[i]
         if ((charKey === seperator) && (path[i - 1] !== escape)) {
             if (key.length > 0) keys.push(toNumber(key))
@@ -76,3 +77,26 @@ var split = (path, seperator) => {
 }
 
 split("a.b.c.0.0\\.0\\.0\\.0\\.0\\.0\\.0.a.b.0....", ".")
+
+
+var del = (obj, keys) => {
+    if (obj === undefined) return false
+    if (!keys || keys.length === 0) return true
+    keys = split(keys)
+    let [key, ...remaining] = keys
+    if (keys.length === 1) {
+        if (Array.isArray(obj) && !isNaN(key)) {
+            obj.splice(key, 1)
+        } else {
+            delete obj[key]
+        }
+        return true
+    } else {
+        return del(obj[key], [...remaining])
+    }
+}
+
+del(obj, "a.b.c.d.e.f.0.a.b.0")
+
+console.log("after delete", obj)
+console.log(get(obj, "a.b.c.d.e.f.0.a.b.0"), "a.b.c.d.e.f.0.a.b.0")

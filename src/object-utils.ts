@@ -1,9 +1,13 @@
-export const toNumber = (val: any): number | string => {
+import { keypath, arrayMethods } from './types'
+import deepmerge from 'deepmerge'
+import equal from 'fast-deep-equal'
+
+const toNumber = (val: any): number | string => {
     if (!isNaN(val)) return val * 1
     return val
 }
 
-export const split = (path: string | any[], seperator: string = ".", escape: string = "\\") => {
+export const split = (path: keypath, seperator: string = ".", escape: string = "\\") => {
     if (!path) return []
     if (Array.isArray(path)) return path
     let keys = []
@@ -21,7 +25,7 @@ export const split = (path: string | any[], seperator: string = ".", escape: str
     return keys
 }
 
-export const get = (obj: any, keys: (string | any[]), defaultValue?: any): any => {
+export const get = (obj: any, keys: (keypath), defaultValue?: any): any => {
     if (obj === undefined) return defaultValue
     if (!keys || keys.length === 0) return obj
     keys = split(keys)
@@ -30,7 +34,7 @@ export const get = (obj: any, keys: (string | any[]), defaultValue?: any): any =
     return get(obj[key], remaining, defaultValue)
 }
 
-export const set = (obj: any, keys: (string | any[]), value: any, dontReplace?: boolean): boolean => {
+export const set = (obj: any, keys: (keypath), value: any, dontReplace?: boolean): boolean => {
     if (obj === undefined) return false
     if (!keys || keys.length === 0) return true
     keys = split(keys)
@@ -47,35 +51,50 @@ export const set = (obj: any, keys: (string | any[]), value: any, dontReplace?: 
     return true
 }
 
-export const has = (obj: any, keys: (string | any[])) => {
+export const has = (obj: any, keys: (keypath)) => {
     const value = get(obj, keys)
     if (value === undefined || value === null) return false
     return true
 }
 
-export const ensureExists = (obj: any, keys: (string | any[]), value: any) => {
+export const ensureExists = (obj: any, keys: (keypath), value: any) => {
     return set(obj, keys, value, true)
 }
 
-export const insert = (obj: any, keys: string | any[], value: any, at?: number) => {
+export const arrayOps = (obj: any, keys: keypath, method: arrayMethods, ...args: any[]): any => {
     let arr: any[] = get(obj, keys)
     if (!Array.isArray(arr)) {
         arr = []
         set(obj, keys, arr)
     }
-    if (at === undefined) {
-        arr.push(value)
-    } else {
-        arr.splice(at, 0, value)
-    }
-    return true
+    return arr[method].apply(arr, args)
 }
 
-export const push = (obj: any, keys: string | any[], value: any, at: number) => {
-    return insert(obj, keys, value)
+export const insert = (obj: any, keys: keypath, value: any, at: number) => {
+    return arrayOps(obj, keys, arrayMethods.splice, at, 0, value)
 }
 
-export const empty = (obj: any, keys: string | any[]) => {
+export const push = (obj: any, keys: keypath, ...values: any[]) => {
+    return arrayOps(obj, keys, arrayMethods.push, ...values)
+}
+
+export const unshift = (obj: any, keys: keypath, ...args: any[]) => {
+    return arrayOps(obj, keys, arrayMethods.unshift, ...args)
+}
+
+export const pop = (obj: any, keys: keypath) => {
+    return arrayOps(obj, keys, arrayMethods.pop)
+}
+
+export const shift = (obj: any, keys: keypath) => {
+    return arrayOps(obj, keys, arrayMethods.shift)
+}
+
+export const splice = (obj: any, keys: keypath, ...args: any[]) => {
+    return arrayOps(obj, keys, arrayMethods.unshift, ...args)
+}
+
+export const empty = (obj: any, keys: keypath) => {
     const value = get(obj, keys)
     let finalValue
     switch (true) {
@@ -105,12 +124,38 @@ export const empty = (obj: any, keys: string | any[]) => {
     if (finalValue !== undefined) {
         set(obj, keys, finalValue)
     }
+    return true
 }
 
-export const coalesce = (obj: any, keysArr: (string | any[])[], defaultValue: any) => {
+export const coalesce = (obj: any, keysArr: (keypath)[], defaultValue: any) => {
     for (let i = 0, l = keysArr.length; i < l; ++i) {
         const val = get(obj, keysArr[i])
         if (val !== undefined) return val
     }
     return defaultValue
+}
+
+export const del = (obj: any, keys: keypath): boolean => {
+    if (obj === undefined) return false
+    if (!keys || keys.length === 0) return true
+    keys = split(keys)
+    let [key, ...remaining] = keys
+    if (keys.length === 1) {
+        if (Array.isArray(obj) && !isNaN(key)) {
+            obj[key].splice(key, 1)
+        } else {
+            delete obj[key]
+        }
+        return true
+    } else {
+        return del(obj[key], [...remaining])
+    }
+}
+
+export const merge = (obj: any, keys: keypath, data: any): boolean => {
+    ensureExists(obj, keys, {})
+    let old = get(obj, keys)
+    if (equal(old, data)) return false
+    deepmerge(old, data)
+    return true
 }

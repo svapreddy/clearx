@@ -1,4 +1,6 @@
-import { options, isReactFamilyComponent, keypath } from './utils'
+import { isReactFamilyComponent } from './utils'
+import { options, keypath } from './types'
+import { get, set, coalesce, empty, insert, push, pop, shift, splice, ensureExists, del, has, merge } from './object-utils'
 
 class Handler {
     constructor() { }
@@ -101,29 +103,48 @@ class Segment {
 class Clearx {
     public readonly segments: Segment[] = []
     constructor(public readonly data: object) { }
-
-    public get(key: keypath): any {
-        // const normalized = getPathSegments(key)
-        // path(normalized, this.data)
-        // objectpath.get()
+    public get(key: keypath, defaultValue: any): any {
+        return get(this.data, key, defaultValue)
     }
-    public set(key: keypath, value: any): void {
-        // const normalized = getPathSegments(key)
-        // assocPath(normalized, value, this.data)
+    public set(key: keypath, value: any, doNotReplace: boolean = false): boolean {
+        return set(this.data, key, value, doNotReplace)
     }
-    public coalesce(keys: keypath[], defaultValue: any): any { }
-    public empty(key: keypath): void { }
-    public insert(key: keypath, value: any, position: number): void { }
-    public push(key: keypath, ...values: any[]): void { }
-    public ensureExists(key: keypath, defaultValue: any): any { }
-    public del(key: keypath): void { }
+    public coalesce(keys: keypath[], defaultValue: any): any {
+        return coalesce(this.data, keys, defaultValue)
+    }
+    public empty(key: keypath): boolean {
+        return empty(this.data, key)
+    }
+    public insert(key: keypath, value: any, position: number): any {
+        return insert(this.data, key, value, position)
+    }
+    public push(key: keypath, ...values: any[]): any {
+        return push(this.data, key, ...values)
+    }
+    public unshift(key: keypath, ...values: any[]): any {
+        return push(this.data, key, ...values)
+    }
+    public pop(key: keypath): any {
+        return pop(this.data, key)
+    }
+    public shift(key: keypath): any {
+        return shift(this.data, key)
+    }
+    public splice(key: keypath, ...args: any[]): any {
+        return splice(this.data, key, ...args)
+    }
+    public ensureExists(key: keypath, defaultValue: any): boolean {
+        return ensureExists(this.data, key, defaultValue)
+    }
+    public delete(key: keypath): boolean {
+        return del(this.data, key)
+    }
     public has(key: keypath): boolean {
-        // const normalized = getPathSegments(key)
-        // return !!this.get(normalized)
-        return true
+        return has(this.data, key)
     }
-    public merge(key: keypath, data: object): void { }
-
+    public merge(key: keypath, data: object): boolean {
+        return merge(this.data, key, data)
+    }
     public bind(): Segment {
         const opts: options = {
             to: {},
@@ -132,6 +153,7 @@ class Clearx {
         const segment = new Segment(opts, this, new Handler())
         return segment
     }
+    public destroy() { }
 }
 
 
