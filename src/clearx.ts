@@ -1,26 +1,25 @@
-import { options, isReactFamilyComponent, keypath, getPathSegments } from './base';
-import { pipe, path, assocPath } from 'ramda'
+import { options, isReactFamilyComponent, keypath } from './utils'
 
 class Handler {
-    constructor () {}
-    attachObserver (keys: keypath[]) : void {}
-    detachObserver (segment: Segment) : void {}
+    constructor() { }
+    attachObserver(keys: keypath[]): void { }
+    detachObserver(segment: Segment): void { }
 }
 
 class Segment {
-    
-    public readonly isBoundToReactComponent: boolean
-    public readonly active : boolean
-    private componentWillUnmount: any
-    private detachListeners: Function = () => {}
 
-    constructor (private config : options, private store : Clearx, private handler : Handler) {
+    public readonly isBoundToReactComponent: boolean
+    public readonly active: boolean
+    private componentWillUnmount: any
+    private detachListeners: Function = () => { }
+
+    constructor(private config: options, private store: Clearx, private handler: Handler) {
         this.isBoundToReactComponent = isReactFamilyComponent(config.to)
         this.bootstrap()
         this.active = true
     }
 
-    private attachListeners() : Function {
+    private attachListeners(): Function {
         const dataChanges = this.listenDataChanges()
         const unmountHook = this.listenUnmount()
         return () => {
@@ -29,7 +28,7 @@ class Segment {
         }
     }
 
-    private normalizePaths (): void {
+    private normalizePaths(): void {
         let listeningKeys: keypath[] = []
         let paths = this.config.paths
         for (const key in paths) {
@@ -42,7 +41,7 @@ class Segment {
         }
     }
 
-    private listenDataChanges () : CallableFunction {
+    private listenDataChanges(): CallableFunction {
         let listeningKeys: keypath[] = []
         const paths = this.config.paths
         for (const key in paths) {
@@ -55,8 +54,8 @@ class Segment {
         }
     }
 
-    private listenUnmount () : CallableFunction {
-        if (!this.isBoundToReactComponent) return () => {}
+    private listenUnmount(): CallableFunction {
+        if (!this.isBoundToReactComponent) return () => { }
         const target = this.config.to
         this.componentWillUnmount = target.componentWillUnmount
         target.componentWillUnmount = pipe(() => {
@@ -72,7 +71,7 @@ class Segment {
         }
     }
 
-    get data () : object {
+    get data(): object {
         let segment: {
             [key: string]: any
         } = {}
@@ -84,47 +83,49 @@ class Segment {
         return segment
     }
 
-    private assignState () : void {
+    private assignState(): void {
         let data = this.data
     }
 
-    private bootstrap () : void {
+    private bootstrap(): void {
         this.normalizePaths()
         this.detachListeners = this.attachListeners()
         this.assignState()
     }
 
-    public destroy () : void {
+    public destroy(): void {
         this.detachListeners()
     }
 }
 
 class Clearx {
     public readonly segments: Segment[] = []
-    constructor (public readonly data: object) {}
+    constructor(public readonly data: object) { }
 
-    public set (key: keypath, value : any) : void {
-        const normalized = getPathSegments(key)
-        assocPath(normalized, value, this.data)
+    public get(key: keypath): any {
+        // const normalized = getPathSegments(key)
+        // path(normalized, this.data)
+        // objectpath.get()
     }
-    public get (key: keypath) : any {
-        const normalized = getPathSegments(key)
-        path(normalized, this.data)
+    public set(key: keypath, value: any): void {
+        // const normalized = getPathSegments(key)
+        // assocPath(normalized, value, this.data)
     }
-    public coalesce (keys: keypath[], defaultValue: any) : any {}
-    public empty (key: keypath) : void {}
-    public insert (key: keypath, value: any, position: number): void {}
-    public push (key: keypath, ...values: any[]): void {}
-    public ensureExists (key: keypath, defaultValue: any): any {}
-    public del (key: keypath): void {}
-    public has (key: keypath): boolean {
-        const normalized = getPathSegments(key)
-        return !!this.get(normalized)
+    public coalesce(keys: keypath[], defaultValue: any): any { }
+    public empty(key: keypath): void { }
+    public insert(key: keypath, value: any, position: number): void { }
+    public push(key: keypath, ...values: any[]): void { }
+    public ensureExists(key: keypath, defaultValue: any): any { }
+    public del(key: keypath): void { }
+    public has(key: keypath): boolean {
+        // const normalized = getPathSegments(key)
+        // return !!this.get(normalized)
+        return true
     }
-    public merge (key: keypath, data: object): void {}
+    public merge(key: keypath, data: object): void { }
 
-    public bind () : Segment {
-        const opts : options = {
+    public bind(): Segment {
+        const opts: options = {
             to: {},
             paths: {}
         }
