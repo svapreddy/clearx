@@ -56,6 +56,7 @@ export const get = (obj, keys, defaultValue) => {
 }
 
 const assign = (obj, key, val) => {
+  if (hasEqual(obj[key], val)) return false
   obj[key] = val
   return obj[key] === val
 }
@@ -77,7 +78,6 @@ export const set = (obj, keys, value, dontReplace) => {
     return [_, __ || isDataUpdated]
   } else {
     if (obj.hasOwnProperty(key) && dontReplace) return [true, isDataUpdated]
-    if (hasEqual(obj[key], value)) return [true, isDataUpdated]
     isDataUpdated = assign(obj, key, value)
     return [true, isDataUpdated]
   }
