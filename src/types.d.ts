@@ -58,6 +58,12 @@ export interface ClearXIF {
     destroy(): void
 }
 
+export interface DataObserverIF {
+    attachObserver(keys: keypath[]): void
+    detachObserver(segment: SegmentIF): void
+    destroy(): void
+}
+
 export interface clearxOptions {
     keySeperator?: string
 }

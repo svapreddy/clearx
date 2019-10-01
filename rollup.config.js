@@ -6,7 +6,6 @@ import license from 'rollup-plugin-license'
 import filesize from 'rollup-plugin-filesize'
 import standard from 'rollup-plugin-standard'
 import { uglify } from 'rollup-plugin-uglify'
-import typescript from 'rollup-plugin-typescript2'
 
 let packageJSON = require('./package.json')
 
@@ -19,10 +18,9 @@ const bundleName = config.name
 const globalVariableName = 'ClearX'
 
 let defaultConfig = [{
-  input: 'src/clearx.ts',
+  input: 'src/clearx.js',
   plugins: [
     standard(),
-    typescript(),
     resolve({
       extensions: ['.js'],
       browser: true

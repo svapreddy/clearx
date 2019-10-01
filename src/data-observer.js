@@ -1,25 +1,24 @@
-export default class Handler {
+class DataObserver {
   constructor (store) {
     this.store = store
-    this.count = 0
-    this.id = this.store.nextId
     this.listeners = {}
+    this.counter = 0
   }
-  key (arr) {
-    return (arr || []).join('|')
-  }
-  listen (keys, listener) {
+  attachObserver (keys, listener) {
     if (!listener) return
-    const id = listener.id || this.store.nextId
+    if (!keys || keys.length === 0) return
+    ++this.counter
+    const id = `data-slice:${counter}`
     this.listeners[id] = {
       keys,
       listener
     }
-    return id
+    return () => {
+        delete this.listeners[id]
+    }
   }
-  ignore (listener) {
-    if (!listener) return
-    delete this.listeners[listener.id]
+  dataUpdatedAt (keys) {
+    
   }
   changed (changedKeys, updateId) {
     let targets = []
@@ -46,3 +45,4 @@ export default class Handler {
     this.listeners = {}
   }
 }
+export default DataObserver

@@ -29,7 +29,7 @@ let appStore = new ClearX({
 
 test('#React UI component - Bind', (t) => {
   let p = ['glossary', 'GlossDiv', 'GlossList', 'GlossEntry', 'test']
-  
+
   let setStateCalled = false
   let setState = () => {
     setStateCalled = true
@@ -50,7 +50,7 @@ test('#React UI component - Bind', (t) => {
       afterCb && afterCb()
     }
   }
-  
+
   let instance = new Cls()
   t.deepEqual(appStore.get(p), instance.state.store.GlossEntryTest)
   appStore.set(p, 'test2')
@@ -70,7 +70,7 @@ test('#React UI component - Bind', (t) => {
 
 test('#React UI component - Slice', (t) => {
   let p = ['glossary', 'GlossDiv', 'GlossList', 'GlossEntry', 'test']
-  
+
   let setStateCalled = false
   let setState = () => {
     setStateCalled = true
@@ -88,7 +88,7 @@ test('#React UI component - Slice', (t) => {
       afterCb && afterCb()
     }
   }
-  
+
   let instance = new Cls()
   t.deepEqual(appStore.get(p), instance.state.store.GlossEntryTest)
   appStore.set(p, 'test2')
