@@ -1,4 +1,4 @@
-import ClearX from '../src/index'
+import ClearX from '../src/clearx'
 
 let Data = {
   todos: []

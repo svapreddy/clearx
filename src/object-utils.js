@@ -16,6 +16,7 @@ const assign = (obj, key, val) => {
 
 export const freezeObject = (obj) => {
   if (Object.freeze) Object.freeze(obj)
+  return obj
 }
 
 export const hasEqual = (obj1, obj2) => {
@@ -126,7 +127,7 @@ export const shift = (obj, keys) => {
 }
 
 export const splice = (obj, keys, ...args) => {
-  return arrayOps(obj, keys, 'unshift', ...args)
+  return arrayOps(obj, keys, 'splice', ...args)
 }
 
 export const sort = (obj, keys, ...args) => {
@@ -180,7 +181,7 @@ export const del = (obj, keys) => {
   let [key, ...remaining] = keys
   if (keys.length === 1) {
     if (Array.isArray(obj) && !isNaN(key)) {
-      isDataUpdated = splice(obj, key, 1)
+      isDataUpdated = obj.splice(key, 1)
     } else if (obj.hasOwnProperty(key)) {
       isDataUpdated = delete obj[key]
     }

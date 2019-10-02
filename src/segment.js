@@ -76,6 +76,7 @@ class Segment {
       !initialAssignment && setState(data)
     } else if (typeof target.setState === 'function') {
       if (initialAssignment) {
+        target.state = target.state || {}
         target.state.store = data
       } else {
         target.setState({

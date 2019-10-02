@@ -17,7 +17,7 @@ let getTodo = (id) => {
 
 export let deleteTodo = (id) => {
   let todoInfo = getTodo(id)
-  Store.del(['todos', todoInfo.index])
+  Store.delete(['todos', todoInfo.index])
 }
 
 export let toggleTodo = (id) => {

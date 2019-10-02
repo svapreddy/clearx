@@ -3,7 +3,7 @@ import DataObserver from './data-observer'
 import { sort, get, set, coalesce, empty, insert, push, pop, shift, splice, unshift, ensureExists, del, has, merge } from './object-utils'
 
 class Clearx {
-  constructor (data, { keySeperator = '.' }) {
+  constructor (data, { keySeperator = '.' } = {}) {
     this.data = data
     this.segments = []
     this.dataObserver = new DataObserver(this)
