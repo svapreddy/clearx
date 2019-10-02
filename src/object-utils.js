@@ -10,16 +10,20 @@ const toNumber = (val) => {
   }
   return val
 }
+
+const assign = (obj, key, val) => {
+  if (hasEqual(obj[key], val)) return false
+  obj[key] = val
+  return obj[key] === val
+}
+
 export const hasEqual = (obj1, obj2) => {
   return typeof obj1 !== undefined && equal(obj1, obj2)
 }
+
 export const split = (path, seperator = '.', escape = '\\') => {
-  if (!path) {
-    return []
-  }
-  if (Array.isArray(path)) {
-    return path
-  }
+  if (!path) return []
+  if (Array.isArray(path)) return path
   let keys = []
   let key = ''
   for (let i = 0, l = path.length; i < l; ++i) {
@@ -40,10 +44,9 @@ export const split = (path, seperator = '.', escape = '\\') => {
   }
   return keys
 }
+
 export const get = (obj, keys, defaultValue) => {
-  if (obj === undefined) {
-    return defaultValue
-  }
+  if (obj === undefined) return defaultValue
   if (!keys || keys.length === 0) {
     return obj
   }
@@ -55,18 +58,12 @@ export const get = (obj, keys, defaultValue) => {
   return get(obj[key], remaining, defaultValue)
 }
 
-const assign = (obj, key, val) => {
-  if (hasEqual(obj[key], val)) return false
-  obj[key] = val
-  return obj[key] === val
-}
-
 export const set = (obj, keys, value, dontReplace) => {
   let isDataUpdated = false
 
   if (obj === undefined) return [false, isDataUpdated]
   if (!keys || keys.length === 0) return [false, isDataUpdated]
-  
+
   keys = split(keys)
   let [key, next, ...remaining] = keys
   if (next) {
@@ -82,16 +79,17 @@ export const set = (obj, keys, value, dontReplace) => {
     return [true, isDataUpdated]
   }
 }
+
 export const has = (obj, keys) => {
   const value = get(obj, keys)
-  if (value === undefined || value === null) {
-    return false
-  }
+  if (value === undefined || value === null) return false
   return true
 }
+
 export const ensureExists = (obj, keys, value) => {
   return set(obj, keys, value, true)
 }
+
 export const arrayOps = (obj, keys, method, ...args) => {
   let arr = get(obj, keys)
   if (!Array.isArray(arr)) {
@@ -102,24 +100,31 @@ export const arrayOps = (obj, keys, method, ...args) => {
   arr[method].apply(arr, args)
   return [true, arr.length !== origLength]
 }
+
 export const insert = (obj, keys, value, at) => {
   return arrayOps(obj, keys, arrayMethods.splice, at, 0, value)
 }
+
 export const push = (obj, keys, ...values) => {
   return arrayOps(obj, keys, arrayMethods.push, ...values)
 }
+
 export const unshift = (obj, keys, ...args) => {
   return arrayOps(obj, keys, arrayMethods.unshift, ...args)
 }
+
 export const pop = (obj, keys) => {
   return arrayOps(obj, keys, arrayMethods.pop)
 }
+
 export const shift = (obj, keys) => {
   return arrayOps(obj, keys, arrayMethods.shift)
 }
+
 export const splice = (obj, keys, ...args) => {
   return arrayOps(obj, keys, arrayMethods.unshift, ...args)
 }
+
 export const empty = (obj, keys) => {
   let isDataUpdated = false
   const value = get(obj, keys)

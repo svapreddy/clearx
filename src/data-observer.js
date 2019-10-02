@@ -1,3 +1,4 @@
+import { path } from './object-utils'
 class DataObserver {
   constructor (store) {
     this.store = store
@@ -14,31 +15,27 @@ class DataObserver {
       listener
     }
     return () => {
-        delete this.listeners[id]
+      delete this.listeners[id]
     }
   }
-  dataUpdatedAt (keys) {
-    
-  }
-  changed (changedKeys, updateId) {
-    let targets = []
-    changedKeys.forEach((changedKey) => {
-      let handler, handlerKeys, matchedKeys
-      for (handler in this.listeners) {
-        handler = this.listeners[handler]
-        handlerKeys = handler.keys
-        matchedKeys = handlerKeys.filter((handlerKey) => {
-          let _changedKey = changedKey.join('/')
-          let _handlerKey = handlerKey.join('/')
-          return (_handlerKey.indexOf(_changedKey) === 0) || (_changedKey.indexOf(_handlerKey) === 0)
-        })
-        if (matchedKeys.length > 0) {
-          targets.push(handler.listener)
-        }
+  dataUpdatedAt (changedKey) {
+    const seperator = ">>"
+    const targets = []
+    const changedPath = path(changedKey).join(seperator)
+    for (let id in this.listeners) {
+      const { keys, listener } = this.listeners[id]
+      keys = keys.filter((key) => {
+        const keyPath = path(key).join(seperator)
+        return keyPath.startsWith(changedPath) || changedPath.startsWith(keyPath)
+      })
+      if (keys.length > 0) targets.push([keys, listener])
+    }
+    targets.forEach(([keys, listener]) => {
+      try {
+        listener(keys)
+      } catch (ex) {
+        console.log("Error updating", listener, keys)
       }
-    })
-    targets.forEach((listener) => {
-      listener.updated && listener.updated(updateId)
     })
   }
   destroy () {

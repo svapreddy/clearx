@@ -1,25 +1,27 @@
-import { isReactFamilyComponent } from './utils'
 import { split } from './object-utils'
+import deepmerge from 'deepmerge'
 
 class Segment {
   constructor (config, store, dataObserver) {
-    
     this.config = config
     this.store = store
     this.dataObserver = dataObserver
     this.detachListeners = () => {}
     this.keySeperator = '.'
     this.listeningKeys = {}
-    this.isBoundToReactComponent = isReactFamilyComponent(config.to)
     this.bootstrap()
     this.active = true
+    this.interface = {
+      store: this.data,
+      destroy: this.destroy.bind(this)
+    }
   }
   attachListeners () {
     const dataChanges = this.listenDataChanges()
-    const unmountHook = this.listenUnmount()
+    const onUnmount = this.listenUnmount()
     return () => {
       dataChanges()
-      unmountHook()
+      onUnmount()
     }
   }
   normalizePaths () {
@@ -40,16 +42,16 @@ class Segment {
     }
   }
   listenUnmount () {
-    if (!this.isBoundToReactComponent) { return () => {} }
     const target = this.config.to
     this.componentWillUnmount = target.componentWillUnmount
-    target.componentWillUnmount = pipe(() => {
+    
+    target.componentWillUnmount = () => {
       this.destroy()
-    }, () => {
-      if (this.componentWillUnmount) {
+      if (typeof this.componentWillUnmount === "function") {
         this.componentWillUnmount.call(target)
       }
-    })
+    }
+
     return () => {
       target.componentWillUnmount = this.componentWillUnmount
       delete this.componentWillUnmount
@@ -61,31 +63,40 @@ class Segment {
     for (const key in paths) {
       segment[key] = this.store.get(paths[key])
     }
-    return segment
+    return deepmerge({}, segment)
   }
   dataUpdated () {
     this.assignState()
   }
-  assignState () {
-    let data = this.data
-    const target = this.config.to
-    let context = this.targetObj
-    const initialData = this.slice
-
-    if (this.reactLike) {
-      context.state = context.state || {}
-      context.state.store = initialData
+  assignState (initialAssignment) {
+    const [target, setState] = this.config.to
+    const data = this.data
+    if (typeof setState === "function") {
+      !initialAssignment && setState(data)
+    } else if (typeof target.setState === "function") {
+      if (initialAssignment) {
+        target.state.store = data
+      } else {
+        target.setState({
+          store: data
+        })
+      }
     } else {
-      context.store = initialData
+      target.store = data
+    }
+    const events = this.config
+    if (events && typeof events.afterUpdate === "function") {
+      events.afterUpdate(data)
     }
   }
   bootstrap () {
     this.normalizePaths()
     this.detachListeners = this.attachListeners()
-    this.assignState()
+    this.assignState(true)
   }
   destroy () {
     this.detachListeners()
   }
 }
+
 export default Segment
