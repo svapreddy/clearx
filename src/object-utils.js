@@ -1,6 +1,3 @@
-import {
-  arrayMethods
-} from './types'
 import deepmerge from 'deepmerge'
 import equal from 'fast-deep-equal'
 
@@ -17,8 +14,12 @@ const assign = (obj, key, val) => {
   return obj[key] === val
 }
 
+export const freezeObject = (obj) => {
+  if (Object.freeze) Object.freeze(obj)
+}
+
 export const hasEqual = (obj1, obj2) => {
-  return typeof obj1 !== undefined && equal(obj1, obj2)
+  return obj1 !== undefined && equal(obj1, obj2)
 }
 
 export const split = (path, seperator = '.', escape = '\\') => {
@@ -90,7 +91,10 @@ export const ensureExists = (obj, keys, value) => {
   return set(obj, keys, value, true)
 }
 
+const arrayMethods = [ 'push', 'pop', 'splice', 'shift', 'unshift', 'sort' ]
+
 export const arrayOps = (obj, keys, method, ...args) => {
+  if (arrayMethods.indexOf(method) === -1) return false
   let arr = get(obj, keys)
   if (!Array.isArray(arr)) {
     arr = []
@@ -102,27 +106,31 @@ export const arrayOps = (obj, keys, method, ...args) => {
 }
 
 export const insert = (obj, keys, value, at) => {
-  return arrayOps(obj, keys, arrayMethods.splice, at, 0, value)
+  return arrayOps(obj, keys, 'splice', at, 0, value)
 }
 
 export const push = (obj, keys, ...values) => {
-  return arrayOps(obj, keys, arrayMethods.push, ...values)
+  return arrayOps(obj, keys, 'push', ...values)
 }
 
 export const unshift = (obj, keys, ...args) => {
-  return arrayOps(obj, keys, arrayMethods.unshift, ...args)
+  return arrayOps(obj, keys, 'unshift', ...args)
 }
 
 export const pop = (obj, keys) => {
-  return arrayOps(obj, keys, arrayMethods.pop)
+  return arrayOps(obj, keys, 'pop')
 }
 
 export const shift = (obj, keys) => {
-  return arrayOps(obj, keys, arrayMethods.shift)
+  return arrayOps(obj, keys, 'shift')
 }
 
 export const splice = (obj, keys, ...args) => {
-  return arrayOps(obj, keys, arrayMethods.unshift, ...args)
+  return arrayOps(obj, keys, 'unshift', ...args)
+}
+
+export const sort = (obj, keys, ...args) => {
+  return arrayOps(obj, keys, 'sort', ...args)
 }
 
 export const empty = (obj, keys) => {

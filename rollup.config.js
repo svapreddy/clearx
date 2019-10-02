@@ -32,12 +32,12 @@ let defaultConfig = [{
       objectAssign: 'Object.assign'
     }),
     license({
-      sourceMap: true,
-      cwd: '.', // Default is process.cwd()
+      sourcemap: true,
+      cwd: '.',
       banner: {
-        file: path.join(__dirname, 'build.inputs/LICENSE.txt'),
-        encoding: 'utf-8', // Default is utf-8
-        // Optional, may be an object or a function returning an object.
+        content: {
+          file: path.join(__dirname, 'build.inputs/LICENSE.txt')
+        },
         data () {
           return config
         }

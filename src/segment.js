@@ -1,4 +1,4 @@
-import { split } from './object-utils'
+import { split, freezeObject } from './object-utils'
 import deepmerge from 'deepmerge'
 
 class Segment {
@@ -11,10 +11,6 @@ class Segment {
     this.listeningKeys = {}
     this.bootstrap()
     this.active = true
-    this.interface = {
-      store: this.data,
-      destroy: this.destroy.bind(this)
-    }
   }
   attachListeners () {
     const dataChanges = this.listenDataChanges()
@@ -44,10 +40,10 @@ class Segment {
   listenUnmount () {
     const target = this.config.to
     this.componentWillUnmount = target.componentWillUnmount
-    
+
     target.componentWillUnmount = () => {
       this.destroy()
-      if (typeof this.componentWillUnmount === "function") {
+      if (typeof this.componentWillUnmount === 'function') {
         this.componentWillUnmount.call(target)
       }
     }
@@ -63,17 +59,22 @@ class Segment {
     for (const key in paths) {
       segment[key] = this.store.get(paths[key])
     }
-    return deepmerge({}, segment)
+    return freezeObject(deepmerge({}, segment))
   }
   dataUpdated () {
     this.assignState()
   }
   assignState (initialAssignment) {
-    const [target, setState] = this.config.to
+    let target, setState
+    if (Array.isArray(this.config.to)) {
+      [target, setState] = this.config.to
+    } else {
+      target = this.config.to
+    }
     const data = this.data
-    if (typeof setState === "function") {
+    if (typeof setState === 'function') {
       !initialAssignment && setState(data)
-    } else if (typeof target.setState === "function") {
+    } else if (typeof target.setState === 'function') {
       if (initialAssignment) {
         target.state.store = data
       } else {
@@ -85,14 +86,19 @@ class Segment {
       target.store = data
     }
     const events = this.config
-    if (events && typeof events.afterUpdate === "function") {
+    if (events && typeof events.afterUpdate === 'function') {
       events.afterUpdate(data)
     }
+    return data
   }
   bootstrap () {
     this.normalizePaths()
     this.detachListeners = this.attachListeners()
-    this.assignState(true)
+    this.interface = {
+      store: this.assignState(true),
+      destroy: this.destroy.bind(this)
+    }
+    freezeObject(this.interface)
   }
   destroy () {
     this.detachListeners()

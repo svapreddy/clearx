@@ -1,6 +1,6 @@
 import Segment from './segment'
 import DataObserver from './data-observer'
-import { get, set, coalesce, empty, insert, push, pop, shift, splice, ensureExists, del, has, merge, hasEqual } from './object-utils'
+import { sort, get, set, coalesce, empty, insert, push, pop, shift, splice, unshift, ensureExists, del, has, merge } from './object-utils'
 
 class Clearx {
   constructor (data, { keySeperator = '.' }) {
@@ -12,7 +12,7 @@ class Clearx {
   triggerEvents (key) {
     this.dataObserver.dataUpdatedAt(key)
   }
-  executeUtil ([status, changed]) {
+  executeUtil (key, [status, changed]) {
     if (changed) this.triggerEvents(key)
     return status
   }
@@ -20,43 +20,46 @@ class Clearx {
     return get(this.data, key, defaultValue)
   }
   set (key, value, doNotReplace = false) {
-    return this.executeUtil(set(this.data, key, value, doNotReplace))
+    return this.executeUtil(key, set(this.data, key, value, doNotReplace))
   }
   coalesce (keys, defaultValue) {
     return coalesce(this.data, keys, defaultValue)
   }
   empty (key) {
-    return this.executeUtil(empty(this.data, key))
+    return this.executeUtil(key, empty(this.data, key))
   }
   insert (key, value, position) {
-    return this.executeUtil(insert(this.data, key, value, position))
+    return this.executeUtil(key, insert(this.data, key, value, position))
   }
   push (key, ...values) {
-    return this.executeUtil(push(this.data, key, ...values))
+    return this.executeUtil(key, push(this.data, key, ...values))
   }
   unshift (key, ...values) {
-    return this.executeUtil(unshift(this.data, key, ...values))
+    return this.executeUtil(key, unshift(this.data, key, ...values))
   }
   pop (key) {
-    return this.executeUtil(pop(this.data, key))
+    return this.executeUtil(key, pop(this.data, key))
   }
   shift (key) {
-    return this.executeUtil(shift(this.data, key))
+    return this.executeUtil(key, shift(this.data, key))
   }
   splice (key, ...args) {
-    return this.executeUtil(splice(this.data, key, ...args))
+    return this.executeUtil(key, splice(this.data, key, ...args))
+  }
+  sort (key, ...args) {
+    return this.executeUtil(key, sort(this.data, key, ...args))
   }
   ensureExists (key, defaultValue) {
-    return this.executeUtil(ensureExists(this.data, key, defaultValue))
+    return this.executeUtil(key, ensureExists(this.data, key, defaultValue))
   }
   delete (key) {
-    return this.executeUtil(del(this.data, key))
+    return this.executeUtil(key, del(this.data, key))
   }
   has (key) {
     return has(this.data, key)
   }
   merge (key, data) {
-    return this.executeUtil(merge(this.data, key, data))
+    return this.executeUtil(key, merge(this.data, key, data))
   }
   bind (options) {
     const segment = new Segment({

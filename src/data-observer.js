@@ -1,4 +1,4 @@
-import { path } from './object-utils'
+import { split } from './object-utils'
 class DataObserver {
   constructor (store) {
     this.store = store
@@ -9,7 +9,7 @@ class DataObserver {
     if (!listener) return
     if (!keys || keys.length === 0) return
     ++this.counter
-    const id = `data-slice:${counter}`
+    const id = `data-slice:${this.counter}`
     this.listeners[id] = {
       keys,
       listener
@@ -19,13 +19,13 @@ class DataObserver {
     }
   }
   dataUpdatedAt (changedKey) {
-    const seperator = ">>"
+    const seperator = '>>'
     const targets = []
-    const changedPath = path(changedKey).join(seperator)
+    const changedPath = split(changedKey).join(seperator)
     for (let id in this.listeners) {
-      const { keys, listener } = this.listeners[id]
+      let { keys, listener } = this.listeners[id]
       keys = keys.filter((key) => {
-        const keyPath = path(key).join(seperator)
+        const keyPath = split(key).join(seperator)
         return keyPath.startsWith(changedPath) || changedPath.startsWith(keyPath)
       })
       if (keys.length > 0) targets.push([keys, listener])
@@ -34,7 +34,7 @@ class DataObserver {
       try {
         listener(keys)
       } catch (ex) {
-        console.log("Error updating", listener, keys)
+        console.log('Error updating', listener, keys)
       }
     })
   }
