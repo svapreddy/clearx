@@ -1,6 +1,6 @@
 import Segment from './segment'
 import DataObserver from './data-observer'
-import { sort, get, set, coalesce, empty, insert, push, pop, shift, splice, unshift, ensureExists, del, has, merge } from './object-utils'
+import { sort, get, set, coalesce, empty, insert, push, pop, shift, splice, unshift, ensureExists, del, has, merge, increment, decrement, toggle } from './object-utils'
 
 class Clearx {
   constructor (data, { keySeperator = '.' } = {}) {
@@ -60,6 +60,15 @@ class Clearx {
   }
   merge (key, data) {
     return this.executeUtil(key, merge(this.data, key, data))
+  }
+  increment (key, by) {
+    return this.executeUtil(key, increment(this.data, key, by))
+  }
+  decrement (key, by) {
+    return this.executeUtil(key, decrement(this.data, key, by))
+  }
+  toggle (key) {
+    return this.executeUtil(key, toggle(this.data, key))
   }
   bind (options) {
     const segment = new Segment({

@@ -32,9 +32,9 @@ class Segment {
   }
   listenDataChanges () {
     let listeningKeys = Object.values(this.listeningKeys)
-    this.dataObserver.attachObserver(listeningKeys, this.dataUpdated.bind(this))
+    const cacelObserver = this.dataObserver.attachObserver(listeningKeys, this.dataUpdated.bind(this))
     return () => {
-      this.dataObserver.detachObserver(this)
+      cacelObserver()
     }
   }
   listenUnmount () {

@@ -102,7 +102,11 @@ export const arrayOps = (obj, keys, method, ...args) => {
     set(obj, keys, arr)
   }
   const origLength = arr.length
-  arr[method].apply(arr, args)
+  try {
+    arr[method].apply(arr, args)
+  } catch (ex) {
+    // Probably freeze!
+  }
   return [true, arr.length !== origLength]
 }
 
@@ -132,6 +136,25 @@ export const splice = (obj, keys, ...args) => {
 
 export const sort = (obj, keys, ...args) => {
   return arrayOps(obj, keys, 'sort', ...args)
+}
+
+export const increment = (obj, keys, by = 1) => {
+  let val = parseInt(get(obj, keys), 10)
+  if (isNaN(val)) {
+    val = 0
+  } else {
+    val += by
+  }
+  return set(obj, keys, val)
+}
+
+export const decrement = (obj, keys, by = 1) => {
+  return increment(obj, keys, by * -1)
+}
+
+export const toggle = (obj, keys) => {
+  const existing = !!get(obj, keys)
+  return set(obj, keys, !existing)
 }
 
 export const empty = (obj, keys) => {
@@ -181,7 +204,9 @@ export const del = (obj, keys) => {
   let [key, ...remaining] = keys
   if (keys.length === 1) {
     if (Array.isArray(obj) && !isNaN(key)) {
-      isDataUpdated = obj.splice(key, 1)
+      const len = obj.length
+      obj.splice(key, 1)
+      isDataUpdated = len !== obj.length
     } else if (obj.hasOwnProperty(key)) {
       isDataUpdated = delete obj[key]
     }
