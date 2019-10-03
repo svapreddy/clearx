@@ -1,6 +1,8 @@
 (function () {
 	'use strict';
 
+	var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
 	function unwrapExports (x) {
 		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x.default : x;
 	}
@@ -485,14 +487,763 @@
 	  module.exports = reactDom_production_min;
 	}
 	});
+	var reactDom_1 = reactDom.render;
+
+	var umd = createCommonjsModule(function (module, exports) {
+	(function (global, factory) {
+		module.exports = factory();
+	}(commonjsGlobal, (function () {
+	var isMergeableObject = function isMergeableObject(value) {
+		return isNonNullObject(value)
+			&& !isSpecial(value)
+	};
+
+	function isNonNullObject(value) {
+		return !!value && typeof value === 'object'
+	}
+
+	function isSpecial(value) {
+		var stringValue = Object.prototype.toString.call(value);
+
+		return stringValue === '[object RegExp]'
+			|| stringValue === '[object Date]'
+			|| isReactElement(value)
+	}
+
+	// see https://github.com/facebook/react/blob/b5ac963fb791d1298e7f396236383bc955f916c1/src/isomorphic/classic/element/ReactElement.js#L21-L25
+	var canUseSymbol = typeof Symbol === 'function' && Symbol.for;
+	var REACT_ELEMENT_TYPE = canUseSymbol ? Symbol.for('react.element') : 0xeac7;
+
+	function isReactElement(value) {
+		return value.$$typeof === REACT_ELEMENT_TYPE
+	}
+
+	function emptyTarget(val) {
+		return Array.isArray(val) ? [] : {}
+	}
+
+	function cloneUnlessOtherwiseSpecified(value, options) {
+		return (options.clone !== false && options.isMergeableObject(value))
+			? deepmerge(emptyTarget(value), value, options)
+			: value
+	}
+
+	function defaultArrayMerge(target, source, options) {
+		return target.concat(source).map(function(element) {
+			return cloneUnlessOtherwiseSpecified(element, options)
+		})
+	}
+
+	function mergeObject(target, source, options) {
+		var destination = {};
+		if (options.isMergeableObject(target)) {
+			Object.keys(target).forEach(function(key) {
+				destination[key] = cloneUnlessOtherwiseSpecified(target[key], options);
+			});
+		}
+		Object.keys(source).forEach(function(key) {
+			if (!options.isMergeableObject(source[key]) || !target[key]) {
+				destination[key] = cloneUnlessOtherwiseSpecified(source[key], options);
+			} else {
+				destination[key] = deepmerge(target[key], source[key], options);
+			}
+		});
+		return destination
+	}
+
+	function deepmerge(target, source, options) {
+		options = options || {};
+		options.arrayMerge = options.arrayMerge || defaultArrayMerge;
+		options.isMergeableObject = options.isMergeableObject || isMergeableObject;
+
+		var sourceIsArray = Array.isArray(source);
+		var targetIsArray = Array.isArray(target);
+		var sourceAndTargetTypesMatch = sourceIsArray === targetIsArray;
+
+		if (!sourceAndTargetTypesMatch) {
+			return cloneUnlessOtherwiseSpecified(source, options)
+		} else if (sourceIsArray) {
+			return options.arrayMerge(target, source, options)
+		} else {
+			return mergeObject(target, source, options)
+		}
+	}
+
+	deepmerge.all = function deepmergeAll(array, options) {
+		if (!Array.isArray(array)) {
+			throw new Error('first argument should be an array')
+		}
+
+		return array.reduce(function(prev, next) {
+			return deepmerge(prev, next, options)
+		}, {})
+	};
+
+	var deepmerge_1 = deepmerge;
+
+	return deepmerge_1;
+
+	})));
+	});
+
+	var isArray = Array.isArray;
+	var keyList = Object.keys;
+	var hasProp = Object.prototype.hasOwnProperty;
+
+	var fastDeepEqual = function equal(a, b) {
+	  if (a === b) { return true; }
+
+	  if (a && b && typeof a == 'object' && typeof b == 'object') {
+	    var arrA = isArray(a)
+	      , arrB = isArray(b)
+	      , i
+	      , length
+	      , key;
+
+	    if (arrA && arrB) {
+	      length = a.length;
+	      if (length != b.length) { return false; }
+	      for (i = length; i-- !== 0;)
+	        { if (!equal(a[i], b[i])) { return false; } }
+	      return true;
+	    }
+
+	    if (arrA != arrB) { return false; }
+
+	    var dateA = a instanceof Date
+	      , dateB = b instanceof Date;
+	    if (dateA != dateB) { return false; }
+	    if (dateA && dateB) { return a.getTime() == b.getTime(); }
+
+	    var regexpA = a instanceof RegExp
+	      , regexpB = b instanceof RegExp;
+	    if (regexpA != regexpB) { return false; }
+	    if (regexpA && regexpB) { return a.toString() == b.toString(); }
+
+	    var keys = keyList(a);
+	    length = keys.length;
+
+	    if (length !== keyList(b).length)
+	      { return false; }
+
+	    for (i = length; i-- !== 0;)
+	      { if (!hasProp.call(b, keys[i])) { return false; } }
+
+	    for (i = length; i-- !== 0;) {
+	      key = keys[i];
+	      if (!equal(a[key], b[key])) { return false; }
+	    }
+
+	    return true;
+	  }
+
+	  return a!==a && b!==b;
+	};
+
+	var toNumber = function (val) {
+	  if (!isNaN(val)) {
+	    return parseInt(val, 10)
+	  }
+	  return val
+	};
+
+	var assign = function (obj, key, val) {
+	  if (hasEqual(obj[key], val)) { return false }
+	  obj[key] = val;
+	  return obj[key] === val
+	};
+
+	var freezeObject = function (obj) {
+	  if (Object.freeze) { Object.freeze(obj); }
+	  return obj
+	};
+
+	var hasEqual = function (obj1, obj2) {
+	  return obj1 !== undefined && fastDeepEqual(obj1, obj2)
+	};
+
+	var split = function (path, seperator, escape) {
+	  if ( seperator === void 0 ) seperator = '.';
+	  if ( escape === void 0 ) escape = '\\';
+
+	  if (!path) { return [] }
+	  if (Array.isArray(path)) { return path }
+	  var keys = [];
+	  var key = '';
+	  for (var i = 0, l = path.length; i < l; ++i) {
+	    var charKey = path[i];
+	    if ((charKey === seperator) && (path[i - 1] !== escape)) {
+	      if (key.length > 0) {
+	        keys.push(toNumber(key));
+	      }
+	      key = '';
+	    } else {
+	      if (charKey !== escape) {
+	        key += path[i];
+	      }
+	    }
+	  }
+	  if (key.length > 0) {
+	    keys.push(toNumber(key));
+	  }
+	  return keys
+	};
+
+	var get = function (obj, keys, defaultValue) {
+	  if (obj === undefined) { return defaultValue }
+	  if (!keys || keys.length === 0) {
+	    return obj
+	  }
+	  keys = split(keys);
+	  var key = keys[0];
+	  var remaining = keys.slice(1);
+	  if (!isNaN(key)) {
+	    key *= 1;
+	  }
+	  return get(obj[key], remaining, defaultValue)
+	};
+
+	var set = function (obj, keys, value, dontReplace) {
+	  var isDataUpdated = false;
+
+	  if (obj === undefined) { return [false, isDataUpdated] }
+	  if (!keys || keys.length === 0) { return [false, isDataUpdated] }
+
+	  keys = split(keys);
+	  var key = keys[0];
+	  var next = keys[1];
+	  var remaining = keys.slice(2);
+	  if (next !== undefined) {
+	    if (!obj.hasOwnProperty(key)) {
+	      var val = !isNaN(next) ? [] : {};
+	      isDataUpdated = assign(obj, key, val);
+	    }
+	    var ref = set(obj[key], [next ].concat( remaining), value, dontReplace);
+	    var _ = ref[0];
+	    var _$1 = ref[1];
+	    return [_, _$1 || isDataUpdated]
+	  } else {
+	    if (obj.hasOwnProperty(key) && dontReplace) { return [true, isDataUpdated] }
+	    isDataUpdated = assign(obj, key, value);
+	    return [true, isDataUpdated]
+	  }
+	};
+
+	var has = function (obj, keys) {
+	  var value = get(obj, keys);
+	  if (value === undefined || value === null) { return false }
+	  return true
+	};
+
+	var ensureExists = function (obj, keys, value) {
+	  return set(obj, keys, value, true)
+	};
+
+	var arrayMethods = [ 'push', 'pop', 'splice', 'shift', 'unshift', 'sort' ];
+
+	var arrayOps = function (obj, keys, method) {
+	  var args = [], len = arguments.length - 3;
+	  while ( len-- > 0 ) args[ len ] = arguments[ len + 3 ];
+
+	  if (arrayMethods.indexOf(method) === -1) { return false }
+	  var arr = get(obj, keys);
+	  if (!Array.isArray(arr)) {
+	    arr = [];
+	    set(obj, keys, arr);
+	  }
+	  var origLength = arr.length;
+	  try {
+	    arr[method].apply(arr, args);
+	  } catch (ex) {
+	    // Probably freeze!
+	  }
+	  return [true, true]
+	};
+
+	var insert = function (obj, keys, value, at) {
+	  return arrayOps(obj, keys, 'splice', at, 0, value)
+	};
+
+	var push = function (obj, keys) {
+	  var values = [], len = arguments.length - 2;
+	  while ( len-- > 0 ) values[ len ] = arguments[ len + 2 ];
+
+	  return arrayOps.apply(void 0, [ obj, keys, 'push' ].concat( values ))
+	};
+
+	var unshift = function (obj, keys) {
+	  var args = [], len = arguments.length - 2;
+	  while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+	  return arrayOps.apply(void 0, [ obj, keys, 'unshift' ].concat( args ))
+	};
+
+	var pop = function (obj, keys) {
+	  return arrayOps(obj, keys, 'pop')
+	};
+
+	var shift = function (obj, keys) {
+	  return arrayOps(obj, keys, 'shift')
+	};
+
+	var splice = function (obj, keys) {
+	  var args = [], len = arguments.length - 2;
+	  while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+	  return arrayOps.apply(void 0, [ obj, keys, 'splice' ].concat( args ))
+	};
+
+	var sort = function (obj, keys) {
+	  var args = [], len = arguments.length - 2;
+	  while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+	  return arrayOps.apply(void 0, [ obj, keys, 'sort' ].concat( args ))
+	};
+
+	var increment = function (obj, keys, by) {
+	  if ( by === void 0 ) by = 1;
+
+	  var val = parseInt(get(obj, keys), 10);
+	  if (isNaN(val)) {
+	    val = 0;
+	  } else {
+	    val += by;
+	  }
+	  return set(obj, keys, val)
+	};
+
+	var decrement = function (obj, keys, by) {
+	  if ( by === void 0 ) by = 1;
+
+	  return increment(obj, keys, by * -1)
+	};
+
+	var toggle = function (obj, keys) {
+	  var existing = !!get(obj, keys);
+	  return set(obj, keys, !existing)
+	};
+
+	var empty = function (obj, keys) {
+	  var isDataUpdated = false;
+	  var value = get(obj, keys);
+	  if (value === undefined) { return [true, isDataUpdated] }
+	  var finalValue;
+	  switch (true) {
+	    case typeof value === 'string':
+	      finalValue = '';
+	      break
+	    case typeof value === 'number':
+	      finalValue = 0;
+	      break
+	    case typeof value === 'boolean':
+	      finalValue = false;
+	      break
+	    case Array.isArray(value):
+	      value.length = 0;
+	      break
+	    case typeof value === 'object':
+	      for (var i in value) {
+	        if (value.hasOwnProperty(i)) {
+	          isDataUpdated = delete value[i] || isDataUpdated;
+	        }
+	      }
+	      return [true, isDataUpdated]
+	  }
+	  return set(obj, keys, finalValue)
+	};
+
+	var coalesce = function (obj, keysArr, defaultValue) {
+	  for (var i = 0, l = keysArr.length; i < l; ++i) {
+	    var val = get(obj, keysArr[i]);
+	    if (val !== undefined) {
+	      return val
+	    }
+	  }
+	  return defaultValue
+	};
+
+	var del = function (obj, keys) {
+	  var isDataUpdated = false;
+	  if (obj === undefined) { return [false, isDataUpdated] }
+	  if (!keys || keys.length === 0) { return [false, isDataUpdated] }
+	  keys = split(keys);
+	  var key = keys[0];
+	  var remaining = keys.slice(1);
+	  if (keys.length === 1) {
+	    if (Array.isArray(obj) && !isNaN(key)) {
+	      var len = obj.length;
+	      obj.splice(key, 1);
+	      isDataUpdated = len !== obj.length;
+	    } else if (obj.hasOwnProperty(key)) {
+	      isDataUpdated = delete obj[key];
+	    }
+	    return [true, isDataUpdated]
+	  } else {
+	    return del(obj[key], [].concat( remaining ))
+	  }
+	};
+
+	var merge = function (obj, keys, data) {
+	  return set(obj, keys, umd(get(obj, keys), data))
+	};
+
+	var Segment = function Segment (config, store, dataObserver) {
+	  this.config = config;
+	  this.store = store;
+	  this.dataObserver = dataObserver;
+	  this.detachListeners = function () {};
+	  this.keySeperator = '.';
+	  this.listeningKeys = {};
+	  this.bootstrap();
+	  this.active = true;
+	};
+
+	var prototypeAccessors = { data: { configurable: true } };
+	Segment.prototype.attachListeners = function attachListeners () {
+	  var dataChanges = this.listenDataChanges();
+	  var onUnmount = this.listenUnmount();
+	  return function () {
+	    dataChanges();
+	    onUnmount();
+	  }
+	};
+	Segment.prototype.normalizePaths = function normalizePaths () {
+	  var listeningKeys = {};
+	  var paths = this.config.paths;
+	  for (var key in paths) {
+	    if (paths.hasOwnProperty(key)) {
+	      listeningKeys[key] = split(paths[key], this.keySeperator);
+	    }
+	  }
+	  this.listeningKeys = listeningKeys;
+	};
+	Segment.prototype.listenDataChanges = function listenDataChanges () {
+	  var listeningKeys = Object.values(this.listeningKeys);
+	  var cacelObserver = this.dataObserver.attachObserver(listeningKeys, this.dataUpdated.bind(this));
+	  return function () {
+	    cacelObserver();
+	  }
+	};
+	Segment.prototype.listenUnmount = function listenUnmount () {
+	    var this$1 = this;
+
+	  var target = this.config.to;
+	  if (Array.isArray(target)) { return function () {} }
+	  this.componentWillUnmount = target.componentWillUnmount;
+	  target.componentWillUnmount = function () {
+	    this$1.destroy();
+	    if (typeof this$1.componentWillUnmount === 'function') {
+	      this$1.componentWillUnmount.call(target);
+	    }
+	  };
+	  return function () {
+	    target.componentWillUnmount = this$1.componentWillUnmount;
+	    delete this$1.componentWillUnmount;
+	  }
+	};
+	Segment.prototype.updateData = function updateData () {
+	  var segment = {};
+	  var paths = this.config.paths;
+	  for (var key in paths) {
+	    segment[key] = this.store.get(paths[key]);
+	  }
+	  this._data = freezeObject(umd({}, segment));
+	};
+	prototypeAccessors.data.get = function () {
+	  if (!this._data) {
+	    this.updateData();
+	  }
+	  return this._data
+	};
+	Segment.prototype.dataUpdated = function dataUpdated () {
+	  this.assignState();
+	};
+	Segment.prototype.assignStateStatelessComponent = function assignStateStatelessComponent () {
+	    var assign;
+
+	  var to = this.config.to;
+	  var _, setState;
+	  if (Array.isArray(to)) {
+	    (assign = to, _ = assign[0], setState = assign[1]);
+	  }
+	  if (!setState) { return }
+	  setState(this.data);
+	  to[0] = this.data;
+	  return true
+	};
+	Segment.prototype.assignStateClassComponent = function assignStateClassComponent () {
+	  var target = this.config.to;
+	  if (typeof target.setState === 'function') {
+	    if (initialAssignment) {
+	      target.state = target.state || {};
+	      target.state.store = data;
+	    } else {
+	      target.setState({
+	        store: data
+	      });
+	    }
+	    return true
+	  }
+	};
+	Segment.prototype.assignStateOthers = function assignStateOthers () {
+	  var target = this.config.to;
+	  if (typeof target === "object") {
+	    target.data = data;
+	  }
+	};
+	Segment.prototype.assignState = function assignState (initialAssignment) {
+	  this.updateData();
+	  var updatedSC = this.assignStateStatelessComponent();
+	  var updatedCC = this.assignStateClassComponent();
+	  if (!updatedSC && !updatedCC) {
+	    this.assignStateOthers();
+	  }
+	  var events = this.config;
+	  if (events && typeof events.afterUpdate === 'function') {
+	    events.afterUpdate(this.data);
+	  }
+	  return this.data
+	};
+	Segment.prototype.bootstrap = function bootstrap () {
+	  this.normalizePaths();
+	  this.detachListeners = this.attachListeners();
+	  this.destroy = this._destroy.bind(this);
+	};
+	Segment.prototype._destroy = function _destroy () {
+	  this.detachListeners();
+	  this.store.destroySegment(this);
+	  delete this._data;
+	  delete this.store;
+	  delete this.config;
+	  delete this.dataObserver;
+	  this.active = false;
+	};
+
+	Object.defineProperties( Segment.prototype, prototypeAccessors );
+
+	var DataObserver = function DataObserver (store) {
+	  this.store = store;
+	  this.listeners = {};
+	  this.counter = 0;
+	};
+	DataObserver.prototype.attachObserver = function attachObserver (keys, listener) {
+	    var this$1 = this;
+
+	  if (!listener) { return }
+	  if (!keys || keys.length === 0) { return }
+	  ++this.counter;
+	  var id = "data-slice:" + (this.counter);
+	  this.listeners[id] = {
+	    keys: keys,
+	    listener: listener
+	  };
+	  return function () {
+	    delete this$1.listeners[id];
+	  }
+	};
+	DataObserver.prototype.dataUpdatedAt = function dataUpdatedAt (changedKey) {
+	  var seperator = '>>';
+	  var targets = [];
+	  var changedPath = split(changedKey).join(seperator);
+	  for (var id in this.listeners) {
+	    var ref = this.listeners[id];
+	      var keys = ref.keys;
+	      var listener = ref.listener;
+	    keys = keys.filter(function (key) {
+	      var keyPath = split(key).join(seperator);
+	      return keyPath.startsWith(changedPath) || changedPath.startsWith(keyPath)
+	    });
+	    if (keys.length > 0) { targets.push([keys, listener]); }
+	  }
+	  targets.forEach(function (ref) {
+	      var keys = ref[0];
+	      var listener = ref[1];
+
+	    try {
+	      listener(keys);
+	    } catch (ex) {
+	      console.log('Error updating', listener, keys);
+	    }
+	  });
+	};
+	DataObserver.prototype.destroy = function destroy () {
+	  this.listeners = {};
+	};
+
+	var Clearx = function Clearx (data, ref) {
+	  if ( ref === void 0 ) ref = {};
+	  var keySeperator = ref.keySeperator; if ( keySeperator === void 0 ) keySeperator = '.';
+
+	  this.data = data;
+	  this.segments = [];
+	  this.dataObserver = new DataObserver(this);
+	  this.keySeperator = keySeperator;
+	};
+	Clearx.prototype.triggerEvents = function triggerEvents (key) {
+	  this.dataObserver.dataUpdatedAt(key);
+	};
+	Clearx.prototype.executeUtil = function executeUtil (key, ref) {
+	    var status = ref[0];
+	    var changed = ref[1];
+
+	  if (changed) { this.triggerEvents(key); }
+	  return status
+	};
+	Clearx.prototype.get = function get$1 (key, defaultValue) {
+	  return get(this.data, key, defaultValue)
+	};
+	Clearx.prototype.set = function set$1 (key, value, doNotReplace) {
+	    if ( doNotReplace === void 0 ) doNotReplace = false;
+
+	  return this.executeUtil(key, set(this.data, key, value, doNotReplace))
+	};
+	Clearx.prototype.coalesce = function coalesce$1 (keys, defaultValue) {
+	  return coalesce(this.data, keys, defaultValue)
+	};
+	Clearx.prototype.empty = function empty$1 (key) {
+	  return this.executeUtil(key, empty(this.data, key))
+	};
+	Clearx.prototype.insert = function insert$1 (key, value, position) {
+	  return this.executeUtil(key, insert(this.data, key, value, position))
+	};
+	Clearx.prototype.push = function push$1 (key) {
+	    var values = [], len = arguments.length - 1;
+	    while ( len-- > 0 ) values[ len ] = arguments[ len + 1 ];
+
+	  return this.executeUtil(key, push.apply(void 0, [ this.data, key ].concat( values )))
+	};
+	Clearx.prototype.unshift = function unshift$1 (key) {
+	    var values = [], len = arguments.length - 1;
+	    while ( len-- > 0 ) values[ len ] = arguments[ len + 1 ];
+
+	  return this.executeUtil(key, unshift.apply(void 0, [ this.data, key ].concat( values )))
+	};
+	Clearx.prototype.pop = function pop$1 (key) {
+	  return this.executeUtil(key, pop(this.data, key))
+	};
+	Clearx.prototype.shift = function shift$1 (key) {
+	  return this.executeUtil(key, shift(this.data, key))
+	};
+	Clearx.prototype.splice = function splice$1 (key) {
+	    var args = [], len = arguments.length - 1;
+	    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+	  return this.executeUtil(key, splice.apply(void 0, [ this.data, key ].concat( args )))
+	};
+	Clearx.prototype.sort = function sort$1 (key) {
+	    var args = [], len = arguments.length - 1;
+	    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+	  return this.executeUtil(key, sort.apply(void 0, [ this.data, key ].concat( args )))
+	};
+	Clearx.prototype.ensureExists = function ensureExists$1 (key, defaultValue) {
+	  return this.executeUtil(key, ensureExists(this.data, key, defaultValue))
+	};
+	Clearx.prototype.delete = function delete$1 (key) {
+	  return this.executeUtil(key, del(this.data, key))
+	};
+	Clearx.prototype.has = function has$1 (key) {
+	  return has(this.data, key)
+	};
+	Clearx.prototype.merge = function merge$1 (key, data) {
+	  return this.executeUtil(key, merge(this.data, key, data))
+	};
+	Clearx.prototype.increment = function increment$1 (key, by) {
+	  return this.executeUtil(key, increment(this.data, key, by))
+	};
+	Clearx.prototype.decrement = function decrement$1 (key, by) {
+	  return this.executeUtil(key, decrement(this.data, key, by))
+	};
+	Clearx.prototype.toggle = function toggle$1 (key) {
+	  return this.executeUtil(key, toggle(this.data, key))
+	};
+	Clearx.prototype.bind = function bind (options) {
+	  var to = options.to;
+	  var component, segment;
+
+	  if (Array.isArray(to)) {
+	    component = to[1];
+	    segment = component.__store;
+	  }
+
+	  if (segment) { return segment }
+	    
+	  segment = new Segment(Object.assign({}, {keySeperator: this.keySeperator},
+	    options), this, this.dataObserver);
+
+	  Object.defineProperty(component, '__store', {
+	    value: segment,
+	    writable: false
+	  });
+
+	  this.segments.push(segment);
+	  return segment
+	};
+	Clearx.prototype.destroySegment = function destroySegment (segment) {
+	  var index = this.segments.indexOf(segment);
+	  if (index > -1) { this.segments.splice(index, 1); }
+	};
+	Clearx.prototype.destroy = function destroy () {
+	  this.segments.forEach(function (segment) {
+	    segment.destroy();
+	  });
+	  this.dataObserver.destroy();
+	  this.data = {};
+	};
+
+	var data$1 = {
+	  title: 'Todo App',
+	  todos: [],
+	  count: 0
+	};
+
+	var store = new Clearx(data$1);
+
+	var useState = react.useState;
+	var useEffect = react.useEffect;
+	var render = reactDom.render;
+	var unmountComponentAtNode = reactDom.unmountComponentAtNode;
 
 	var TodoApp = function () {
+	  
+	  var ref = store.bind({
+	    paths: {
+	      todos: 'todos',
+	      count: 'count'
+	    },
+	    to: useState()
+	  });
+	  var data = ref.data;
+	  var destroy = ref.destroy;
+
+	  useEffect(function () { return destroy; }, []);
+
+	  console.log(data);
+	  console.log(store);
+
 	  return (
-	    react.createElement( 'div', null, "Hello!" )
+	    react.createElement( 'div', { class: "container" },
+	      data.count,
+	      react.createElement( 'br', null ),
+	      data.todos.join(', ')
+	    )
 	  )
 	};
 
-	reactDom.render(react.createElement( TodoApp, null ), document.body);
+	setInterval(function () {
+	  store.increment('count', 100);
+	  store.push('todos', Date.now());
+	}, 1000);
+
+	setInterval(function () {
+	  store.decrement('count', 45);
+	}, 1500);
+
+	setTimeout(function () {
+	  unmountComponentAtNode(document.body);
+	}, 15000);
+
+	render(react.createElement( TodoApp, null ), document.body);
 
 }());
 //# sourceMappingURL=todoapp.bundle.js.map

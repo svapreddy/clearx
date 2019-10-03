@@ -39,42 +39,50 @@ class Segment {
   }
   listenUnmount () {
     const target = this.config.to
+    if (Array.isArray(target)) return () => {}
     this.componentWillUnmount = target.componentWillUnmount
-
     target.componentWillUnmount = () => {
       this.destroy()
       if (typeof this.componentWillUnmount === 'function') {
         this.componentWillUnmount.call(target)
       }
     }
-
     return () => {
       target.componentWillUnmount = this.componentWillUnmount
       delete this.componentWillUnmount
     }
   }
-  get data () {
+  updateData () {
     let segment = {}
     const paths = this.config.paths
     for (const key in paths) {
       segment[key] = this.store.get(paths[key])
     }
-    return freezeObject(deepmerge({}, segment))
+    this._data = freezeObject(deepmerge({}, segment))
+  }
+  get data () {
+    if (!this._data) {
+      this.updateData()
+    }
+    return this._data
   }
   dataUpdated () {
     this.assignState()
   }
-  assignState (initialAssignment) {
-    let target, setState
-    if (Array.isArray(this.config.to)) {
-      [target, setState] = this.config.to
-    } else {
-      target = this.config.to
+  assignStateStatelessComponent () {
+    const to = this.config.to
+    let _, setState
+    if (Array.isArray(to)) {
+      [_, setState] = to
     }
-    const data = this.data
-    if (typeof setState === 'function') {
-      !initialAssignment && setState(data)
-    } else if (typeof target.setState === 'function') {
+    if (!setState) return
+    setState(this.data)
+    to[0] = this.data
+    return true
+  }
+  assignStateClassComponent () {
+    let target = this.config.to
+    if (typeof target.setState === 'function') {
       if (initialAssignment) {
         target.state = target.state || {}
         target.state.store = data
@@ -83,26 +91,41 @@ class Segment {
           store: data
         })
       }
-    } else {
-      target.store = data
+      return true
+    }
+  }
+  assignStateOthers () {
+    const target = this.config.to
+    if (typeof target === "object") {
+      target.data = data
+    }
+  }
+  assignState (initialAssignment) {
+    this.updateData()
+    const updatedSC = this.assignStateStatelessComponent()
+    const updatedCC = this.assignStateClassComponent()
+    if (!updatedSC && !updatedCC) {
+      this.assignStateOthers()
     }
     const events = this.config
     if (events && typeof events.afterUpdate === 'function') {
-      events.afterUpdate(data)
+      events.afterUpdate(this.data)
     }
-    return data
+    return this.data
   }
   bootstrap () {
     this.normalizePaths()
     this.detachListeners = this.attachListeners()
-    this.interface = {
-      store: this.assignState(true),
-      destroy: this.destroy.bind(this)
-    }
-    freezeObject(this.interface)
+    this.destroy = this._destroy.bind(this)
   }
-  destroy () {
+  _destroy () {
     this.detachListeners()
+    this.store.destroySegment(this)
+    delete this._data
+    delete this.store
+    delete this.config
+    delete this.dataObserver
+    this.active = false
   }
 }
 

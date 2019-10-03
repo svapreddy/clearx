@@ -8,7 +8,7 @@
     "test": "npm run build && ava --tap",
     "build": "./node_modules/.bin/rollup -c",
     "lint:fix": "./node_modules/.bin/standard ./src --fix",
-    "todo": "./node_modules/.bin/rollup -c example/rollup.todoApp.config.js -w"
+    "todo": "./node_modules/.bin/rollup -c todo-app/rollup.todo-app.config.js -w"
   },
   "repository": {
     "type": "git",
@@ -32,6 +32,8 @@
   "author": "Autodesk Inc.",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@material-ui/core": "^4.5.0",
+    "@material-ui/icons": "^4.4.3",
     "ava": "^1.1.0",
     "buble": "^0.19.6",
     "package.json": "^2.0.1",
@@ -40,6 +42,7 @@
     "rollup": "^1.1.0",
     "rollup-plugin-buble": "^0.19.6",
     "rollup-plugin-commonjs": "^9.2.0",
+    "rollup-plugin-css-only": "^1.0.0",
     "rollup-plugin-filesize": "^6.0.0",
     "rollup-plugin-license": "^0.12.1",
     "rollup-plugin-node-resolve": "^4.0.0",

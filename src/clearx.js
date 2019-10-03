@@ -71,12 +71,32 @@ class Clearx {
     return this.executeUtil(key, toggle(this.data, key))
   }
   bind (options) {
-    const segment = new Segment({
+    const { to } = options
+    let component, segment
+
+    if (Array.isArray(to)) {
+      component = to[1]
+      segment = component.__store
+    }
+
+    if (segment) return segment
+    
+    segment = new Segment({
       keySeperator: this.keySeperator,
       ...options
     }, this, this.dataObserver)
+
+    Object.defineProperty(component, '__store', {
+      value: segment,
+      writable: false
+    })
+
     this.segments.push(segment)
-    return segment.interface
+    return segment
+  }
+  destroySegment (segment) {
+    const index = this.segments.indexOf(segment)
+    if (index > -1) this.segments.splice(index, 1)
   }
   destroy () {
     this.segments.forEach((segment) => {
