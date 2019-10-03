@@ -712,7 +712,7 @@
 	  var key = keys[0];
 	  var next = keys[1];
 	  var remaining = keys.slice(2);
-	  if (next) {
+	  if (next !== undefined) {
 	    if (!obj.hasOwnProperty(key)) {
 	      var val = !isNaN(next) ? [] : {};
 	      isDataUpdated = assign(obj, key, val);
@@ -756,7 +756,7 @@
 	  } catch (ex) {
 	    // Probably freeze!
 	  }
-	  return [true, arr.length !== origLength]
+	  return [true, true]
 	};
 
 	var insert = function (obj, keys, value, at) {

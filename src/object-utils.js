@@ -68,7 +68,7 @@ export const set = (obj, keys, value, dontReplace) => {
 
   keys = split(keys)
   let [key, next, ...remaining] = keys
-  if (next) {
+  if (next !== undefined) {
     if (!obj.hasOwnProperty(key)) {
       const val = !isNaN(next) ? [] : {}
       isDataUpdated = assign(obj, key, val)
@@ -107,7 +107,7 @@ export const arrayOps = (obj, keys, method, ...args) => {
   } catch (ex) {
     // Probably freeze!
   }
-  return [true, arr.length !== origLength]
+  return [true, true]
 }
 
 export const insert = (obj, keys, value, at) => {
