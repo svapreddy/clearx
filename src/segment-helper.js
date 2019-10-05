@@ -66,7 +66,7 @@ class SegmentHelper {
   }
 
   dataTransformer (func) {
-    if (typeof func === "function") {
+    if (typeof func === 'function') {
       this._dataTransformers.push(func)
       this.updateComponents()
     }

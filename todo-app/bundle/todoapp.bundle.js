@@ -995,7 +995,7 @@
 	};
 
 	SegmentHelper.prototype.dataTransformer = function dataTransformer (func) {
-	  if (typeof func === "function") {
+	  if (typeof func === 'function') {
 	    this._dataTransformers.push(func);
 	    this.updateComponents();
 	  }
