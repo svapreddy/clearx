@@ -749,15 +749,17 @@
 
 	var has = function (obj, keys) {
 	  var value = get(obj, keys);
-	  if (value === undefined || value === null) { return false }
+	  if (value === undefined) { return false }
 	  return true
 	};
 
 	var ensureExists = function (obj, keys, value) {
+	  if ( value === void 0 ) value = null;
+
 	  return set(obj, keys, value, true)
 	};
 
-	var arrayMethods = ['push', 'pop', 'splice', 'shift', 'unshift', 'sort'];
+	var arrayMethods = ['push', 'pop', 'splice', 'shift', 'unshift', 'sort', 'slice'];
 
 	var arrayOps = function (obj, keys, method) {
 	  var args = [], len = arguments.length - 3;
@@ -769,16 +771,13 @@
 	    arr = [];
 	    set(obj, keys, arr);
 	  }
+	  var val;
 	  try {
-	    arr[method].apply(arr, args);
+	    val = arr[method].apply(arr, args);
 	  } catch (ex) {
 	    // Probably freeze!
 	  }
-	  return [true, true]
-	};
-
-	var insert = function (obj, keys, value, at) {
-	  return arrayOps(obj, keys, 'splice', at, 0, value)
+	  return [true, true, val]
 	};
 
 	var push = function (obj, keys) {
@@ -786,6 +785,13 @@
 	  while ( len-- > 0 ) values[ len ] = arguments[ len + 2 ];
 
 	  return arrayOps.apply(void 0, [ obj, keys, 'push' ].concat( values ))
+	};
+
+	var insert = function (obj, keys, value, at) {
+	  if (at === undefined) {
+	    return push(obj, keys, value)
+	  }
+	  return arrayOps(obj, keys, 'splice', at, 0, value)
 	};
 
 	var unshift = function (obj, keys) {
@@ -810,6 +816,14 @@
 	  return arrayOps.apply(void 0, [ obj, keys, 'splice' ].concat( args ))
 	};
 
+	var slice = function (obj, keys) {
+	  var args = [], len = arguments.length - 2;
+	  while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+	  var result = arrayOps.apply(void 0, [ obj, keys, 'slice' ].concat( args ));
+	  return result[2]
+	};
+
 	var sort = function (obj, keys) {
 	  var args = [], len = arguments.length - 2;
 	  while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
@@ -823,9 +837,8 @@
 	  var val = parseInt(get(obj, keys), 10);
 	  if (isNaN(val)) {
 	    val = 0;
-	  } else {
-	    val += by;
 	  }
+	  val += by;
 	  return set(obj, keys, val)
 	};
 
@@ -857,7 +870,7 @@
 	      break
 	    case Array.isArray(value):
 	      value.length = 0;
-	      break
+	      return [true, value.length === 0]
 	    case typeof value === 'object':
 	      for (var i in value) {
 	        if (value.hasOwnProperty(i)) {
@@ -872,7 +885,7 @@
 	var coalesce = function (obj, keysArr, defaultValue) {
 	  for (var i = 0, l = keysArr.length; i < l; ++i) {
 	    var val = get(obj, keysArr[i]);
-	    if (val !== undefined) {
+	    if (val !== undefined && val !== null) {
 	      return val
 	    }
 	  }
@@ -901,7 +914,15 @@
 	};
 
 	var merge = function (obj, keys, data) {
-	  return set(obj, keys, umd(get(obj, keys), data))
+	  ensureExists(obj, keys, Array.isArray(data) ? [] : {});
+	  var current = get(obj, keys);
+	  var merged = umd(current, data);
+	  return set(obj, keys, merged)
+	};
+
+	var isEqual = function (obj, keys, data) {
+	  var current = get(obj, keys);
+	  return fastDeepEqual(current, data)
 	};
 
 	var SegmentHelper = function SegmentHelper (paths, keySeperator, store, dataObserver) {
@@ -912,10 +933,11 @@
 	  this.store = store;
 	  this.dataObserver = dataObserver;
 	  this.components = [];
-	  this.afterUpdateEvents = [];
+	  this._afterUpdateEvents = [];
+	  this._dataTransformers = [];
 	};
 
-	var prototypeAccessors = { keys: { configurable: true } };
+	var prototypeAccessors = { keys: { configurable: true },afterUpdateEvents: { configurable: true },dataTransformers: { configurable: true },hasDataListener: { configurable: true } };
 
 	prototypeAccessors.keys.get = function () {
 	  var paths = this.paths;
@@ -972,6 +994,17 @@
 	  component.componentWillUnmount = original;
 	};
 
+	SegmentHelper.prototype.applyDataTransformers = function applyDataTransformers (data) {
+	  this._dataTransformers.forEach(function (func) {
+	    try {
+	      data = func(data);
+	    } catch (ex) {
+	      console.log(func, 'failing to transform', data);
+	    }
+	  });
+	  return data
+	};
+
 	SegmentHelper.prototype.updateData = function updateData () {
 	    var this$1 = this;
 
@@ -992,6 +1025,8 @@
 	      data[key] = this.store.get(path);
 	    }
 	  }
+
+	  data = this.applyDataTransformers(data);
 
 	  if (typeof data === 'object') {
 	    data = freezeObject(umd({}, data));
@@ -1054,13 +1089,32 @@
 	SegmentHelper.prototype.executeAfterUpdate = function executeAfterUpdate () {
 	    var this$1 = this;
 
-	  this.afterUpdateEvents.forEach(function (func) {
+	  this._afterUpdateEvents.forEach(function (func) {
 	    try {
 	      func(this$1.data);
 	    } catch (ex) {
 	      console.log(ex);
 	    }
 	  });
+	};
+
+	prototypeAccessors.afterUpdateEvents.get = function () {
+	  return this._afterUpdateEvents.slice(0)
+	};
+	  
+	prototypeAccessors.dataTransformers.get = function () {
+	  return this._dataTransformers.slice(0)
+	};
+
+	prototypeAccessors.hasDataListener.get = function () {
+	  return !!this.cancelDataListener
+	};
+
+	SegmentHelper.prototype.dataTransformer = function dataTransformer (func) {
+	  if (typeof func === "function") {
+	    this._dataTransformers.push(func);
+	    this.updateComponents();
+	  }
 	};
 
 	SegmentHelper.prototype.addMark = function addMark (component, mark) {
@@ -1090,13 +1144,12 @@
 	  this.keySeperator = keySeperator;
 	  this.store = store;
 	  this.dataObserver = dataObserver;
-	  this.dataTransformers = [];
 	};
 
-	var prototypeAccessors$1 = { data: { configurable: true },components: { configurable: true },afterUpdateEvents: { configurable: true } };
+	var prototypeAccessors$1 = { data: { configurable: true },components: { configurable: true },active: { configurable: true },afterUpdateEvents: { configurable: true },dataTransformers: { configurable: true } };
 
 	Segment.prototype.dataTransformer = function dataTransformer (func) {
-	  if (typeof func === 'function') { this.dataTransformers.push(func); }
+	  this._helper.dataTransformer(func);
 	};
 
 	Segment.prototype.findComponent = function findComponent (search) {
@@ -1145,8 +1198,16 @@
 	  return this._helper.components.slice(0)
 	};
 
+	prototypeAccessors$1.active.get = function () {
+	  return this._helper.hasDataListener
+	};
+
 	prototypeAccessors$1.afterUpdateEvents.get = function () {
-	  return this._helper.afterUpdateEvents.slice(0)
+	  return this._helper.afterUpdateEvents
+	};
+
+	prototypeAccessors$1.dataTransformers.get = function () {
+	  return this._helper.dataTransformers
 	};
 
 	Segment.prototype.unlinkComponent = function unlinkComponent (component) {
@@ -1301,6 +1362,13 @@
 	  return this.executeUtil(key, splice.apply(void 0, [ this.data, key ].concat( args )))
 	};
 
+	Clearx.prototype.slice = function slice$1 (key) {
+	    var args = [], len = arguments.length - 1;
+	    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+	  return slice.apply(void 0, [ this.data, key ].concat( args ))
+	};
+
 	Clearx.prototype.sort = function sort$1 (key) {
 	    var args = [], len = arguments.length - 1;
 	    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
@@ -1334,6 +1402,10 @@
 
 	Clearx.prototype.toggle = function toggle$1 (key) {
 	  return this.executeUtil(key, toggle(this.data, key))
+	};
+
+	Clearx.prototype.isEqual = function isEqual$1 (key, value) {
+	  return isEqual(this.data, key, value)
 	};
 
 	Clearx.prototype.paths = function paths (keys, id, keySeperator) {
@@ -1385,7 +1457,8 @@
 	var data = {
 	  title: 'Todo App',
 	  todos: [],
-	  count: 0
+	  count: 0,
+	  test: {}
 	};
 
 	var store = new Clearx(data);
@@ -1395,7 +1468,7 @@
 	var render = reactDom.render;
 	var unmountComponentAtNode = reactDom.unmountComponentAtNode;
 
-	var todoStore = store.paths('todos');
+	var todoStore = store.paths(['todos', 'count']);
 
 	var TodoApp = function () {
 	  var ref = todoStore.linkComponent(useState());
@@ -1404,8 +1477,8 @@
 
 	  useEffect(function () { return unlinkComponent; }, []);
 
-	  // console.log(data)
-	  // console.log(store)
+	  console.log(data);
+	  console.log(store);
 
 	  return (
 	    react.createElement( 'div', { class: 'container' },
@@ -1423,20 +1496,23 @@
 	  )
 	};
 
-	setInterval(function () {
-	  store.increment('count', 100);
-	  store.push('todos', Date.now());
-	}, 1000);
+	store.ensureExists('profile.age', 30);
 
-	setInterval(function () {
-	  store.decrement('count', 45);
-	}, 1500);
+	console.log(store.merge('test', {a: 1}));
 
-	setTimeout(function () {
-	  unmountComponentAtNode(document.body);
-	  store.destroySegment(todoStore);
-	  console.log(store);
-	}, 15000);
+	// setInterval(() => {
+	//   store.increment('count', 100)
+	//   store.push('todos', Date.now())
+	// }, 1000)
+
+	// setInterval(() => {
+	//   store.decrement('count', 45)
+	// }, 1500)
+
+	// setTimeout(() => {
+	//   unmountComponentAtNode(document.body)
+	//   store.destroySegment(todoStore)
+	// }, 5000)
 
 	render(react.createElement( TodoApp, null ), document.body);
 

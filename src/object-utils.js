@@ -84,15 +84,15 @@ export const set = (obj, keys, value, dontReplace) => {
 
 export const has = (obj, keys) => {
   const value = get(obj, keys)
-  if (value === undefined || value === null) return false
+  if (value === undefined) return false
   return true
 }
 
-export const ensureExists = (obj, keys, value) => {
+export const ensureExists = (obj, keys, value = null) => {
   return set(obj, keys, value, true)
 }
 
-const arrayMethods = ['push', 'pop', 'splice', 'shift', 'unshift', 'sort']
+const arrayMethods = ['push', 'pop', 'splice', 'shift', 'unshift', 'sort', 'slice']
 
 export const arrayOps = (obj, keys, method, ...args) => {
   if (arrayMethods.indexOf(method) === -1) return false
@@ -101,20 +101,24 @@ export const arrayOps = (obj, keys, method, ...args) => {
     arr = []
     set(obj, keys, arr)
   }
+  let val
   try {
-    arr[method].apply(arr, args)
+    val = arr[method].apply(arr, args)
   } catch (ex) {
     // Probably freeze!
   }
-  return [true, true]
-}
-
-export const insert = (obj, keys, value, at) => {
-  return arrayOps(obj, keys, 'splice', at, 0, value)
+  return [true, true, val]
 }
 
 export const push = (obj, keys, ...values) => {
   return arrayOps(obj, keys, 'push', ...values)
+}
+
+export const insert = (obj, keys, value, at) => {
+  if (at === undefined) {
+    return push(obj, keys, value)
+  }
+  return arrayOps(obj, keys, 'splice', at, 0, value)
 }
 
 export const unshift = (obj, keys, ...args) => {
@@ -133,6 +137,11 @@ export const splice = (obj, keys, ...args) => {
   return arrayOps(obj, keys, 'splice', ...args)
 }
 
+export const slice = (obj, keys, ...args) => {
+  const result = arrayOps(obj, keys, 'slice', ...args)
+  return result[2]
+}
+
 export const sort = (obj, keys, ...args) => {
   return arrayOps(obj, keys, 'sort', ...args)
 }
@@ -141,9 +150,8 @@ export const increment = (obj, keys, by = 1) => {
   let val = parseInt(get(obj, keys), 10)
   if (isNaN(val)) {
     val = 0
-  } else {
-    val += by
   }
+  val += by
   return set(obj, keys, val)
 }
 
@@ -173,7 +181,7 @@ export const empty = (obj, keys) => {
       break
     case Array.isArray(value):
       value.length = 0
-      break
+      return [true, value.length === 0]
     case typeof value === 'object':
       for (const i in value) {
         if (value.hasOwnProperty(i)) {
@@ -188,7 +196,7 @@ export const empty = (obj, keys) => {
 export const coalesce = (obj, keysArr, defaultValue) => {
   for (let i = 0, l = keysArr.length; i < l; ++i) {
     const val = get(obj, keysArr[i])
-    if (val !== undefined) {
+    if (val !== undefined && val !== null) {
       return val
     }
   }
@@ -216,5 +224,13 @@ export const del = (obj, keys) => {
 }
 
 export const merge = (obj, keys, data) => {
-  return set(obj, keys, deepmerge(get(obj, keys), data))
+  ensureExists(obj, keys, Array.isArray(data) ? [] : {})
+  const current = get(obj, keys)
+  const merged = deepmerge(current, data)
+  return set(obj, keys, merged)
+}
+
+export const isEqual = (obj, keys, data) => {
+  const current = get(obj, keys)
+  return equal(current, data)
 }

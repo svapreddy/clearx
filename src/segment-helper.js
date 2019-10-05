@@ -8,7 +8,8 @@ class SegmentHelper {
     this.store = store
     this.dataObserver = dataObserver
     this.components = []
-    this.afterUpdateEvents = []
+    this._afterUpdateEvents = []
+    this._dataTransformers = []
   }
 
   get keys () {
@@ -64,6 +65,17 @@ class SegmentHelper {
     component.componentWillUnmount = original
   }
 
+  applyDataTransformers (data) {
+    this._dataTransformers.forEach((func) => {
+      try {
+        data = func(data)
+      } catch (ex) {
+        console.log(func, 'failing to transform', data)
+      }
+    })
+    return data
+  }
+
   updateData () {
     let data = {}
     let paths = this.paths
@@ -82,6 +94,8 @@ class SegmentHelper {
         data[key] = this.store.get(path)
       }
     }
+
+    data = this.applyDataTransformers(data)
 
     if (typeof data === 'object') {
       data = freezeObject(deepmerge({}, data))
@@ -138,13 +152,32 @@ class SegmentHelper {
   }
 
   executeAfterUpdate () {
-    this.afterUpdateEvents.forEach((func) => {
+    this._afterUpdateEvents.forEach((func) => {
       try {
         func(this.data)
       } catch (ex) {
         console.log(ex)
       }
     })
+  }
+
+  get afterUpdateEvents () {
+    return this._afterUpdateEvents.slice(0)
+  }
+  
+  get dataTransformers () {
+    return this._dataTransformers.slice(0)
+  }
+
+  get hasDataListener () {
+    return !!this.cancelDataListener
+  }
+
+  dataTransformer (func) {
+    if (typeof func === "function") {
+      this._dataTransformers.push(func)
+      this.updateComponents()
+    }
   }
 
   addMark (component, mark) {

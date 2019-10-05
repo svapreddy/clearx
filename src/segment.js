@@ -11,11 +11,10 @@ class Segment {
     this.keySeperator = keySeperator
     this.store = store
     this.dataObserver = dataObserver
-    this.dataTransformers = []
   }
 
   dataTransformer (func) {
-    if (typeof func === 'function') this.dataTransformers.push(func)
+    this._helper.dataTransformer(func)
   }
 
   findComponent (search) {
@@ -64,8 +63,16 @@ class Segment {
     return this._helper.components.slice(0)
   }
 
+  get active () {
+    return this._helper.hasDataListener
+  }
+
   get afterUpdateEvents () {
-    return this._helper.afterUpdateEvents.slice(0)
+    return this._helper.afterUpdateEvents
+  }
+
+  get dataTransformers () {
+    return this._helper.dataTransformers
   }
 
   unlinkComponent (component) {

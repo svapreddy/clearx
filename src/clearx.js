@@ -1,6 +1,6 @@
 import Segment from './segment'
 import DataObserver from './data-observer'
-import { sort, get, set, coalesce, empty, insert, push, pop, shift, splice, unshift, ensureExists, del, has, merge, increment, decrement, toggle } from './object-utils'
+import { sort, get, set, coalesce, empty, insert, push, pop, shift, splice, unshift, ensureExists, del, has, merge, increment, decrement, toggle, isEqual, slice } from './object-utils'
 
 class Clearx {
   constructor (data, { keySeperator = '.' } = {}) {
@@ -59,6 +59,10 @@ class Clearx {
     return this.executeUtil(key, splice(this.data, key, ...args))
   }
 
+  slice (key, ...args) {
+    return slice(this.data, key, ...args)
+  }
+
   sort (key, ...args) {
     return this.executeUtil(key, sort(this.data, key, ...args))
   }
@@ -89,6 +93,10 @@ class Clearx {
 
   toggle (key) {
     return this.executeUtil(key, toggle(this.data, key))
+  }
+
+  isEqual (key, value) {
+    return isEqual(this.data, key, value)
   }
 
   paths (keys, id, keySeperator) {

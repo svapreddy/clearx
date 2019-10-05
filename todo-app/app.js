@@ -3,18 +3,19 @@ import reactDOM from 'react-dom'
 import './app.css'
 
 import store from './store'
+
 const { useState, useEffect } = React
 const { render, unmountComponentAtNode } = reactDOM
 
-const todoStore = store.paths('todos')
+const todoStore = store.paths(['todos', 'count'])
 
 const TodoApp = () => {
   const { data, unlinkComponent } = todoStore.linkComponent(useState())
 
   useEffect(() => unlinkComponent, [])
 
-  // console.log(data)
-  // console.log(store)
+  console.log(data)
+  console.log(store)
 
   return (
     <div class='container'>
@@ -32,19 +33,22 @@ const TodoApp = () => {
   )
 }
 
-setInterval(() => {
-  store.increment('count', 100)
-  store.push('todos', Date.now())
-}, 1000)
+store.ensureExists('profile.age', 30)
 
-setInterval(() => {
-  store.decrement('count', 45)
-}, 1500)
+console.log(store.merge('test', {a: 1}))
 
-setTimeout(() => {
-  unmountComponentAtNode(document.body)
-  store.destroySegment(todoStore)
-  console.log(store)
-}, 15000)
+// setInterval(() => {
+//   store.increment('count', 100)
+//   store.push('todos', Date.now())
+// }, 1000)
+
+// setInterval(() => {
+//   store.decrement('count', 45)
+// }, 1500)
+
+// setTimeout(() => {
+//   unmountComponentAtNode(document.body)
+//   store.destroySegment(todoStore)
+// }, 5000)
 
 render(<TodoApp />, document.body)
