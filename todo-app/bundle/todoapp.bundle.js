@@ -1180,22 +1180,27 @@
 	};
 
 	prototypeAccessors$1.data.get = function () {
+	  if (!this._helper) { return {} }
 	  return this._helper.data
 	};
 
 	prototypeAccessors$1.components.get = function () {
+	  if (!this._helper) { return [] }
 	  return this._helper.components.slice(0)
 	};
 
 	prototypeAccessors$1.active.get = function () {
+	  if (!this._helper) { return false }
 	  return this._helper.hasDataListener
 	};
 
 	prototypeAccessors$1.afterUpdateEvents.get = function () {
+	  if (!this._helper) { return [] }
 	  return this._helper.afterUpdateEvents
 	};
 
 	prototypeAccessors$1.dataTransformers.get = function () {
+	  if (!this._helper) { return [] }
 	  return this._helper.dataTransformers
 	};
 
@@ -1235,6 +1240,7 @@
 	Segment.prototype.sync = function sync (on) {
 	    if ( on === void 0 ) on = true;
 
+	  if (!this._helper) { return false }
 	  this.keepSyncing = on;
 	  if (on && !this.active) {
 	    this._helper.observe(true);
@@ -1242,24 +1248,32 @@
 	  if (!on && this.active) {
 	    this._helper.unobserve();
 	  }
+	  return true
 	};
 
 	Segment.prototype.unlinkAll = function unlinkAll () {
+	  if (!this._helper) { return }
 	  this._helper.components.forEach(this.unlink.bind(this));
 	};
 
 	Segment.prototype.onUpdate = function onUpdate (func) {
+	  if (!this._helper) { return }
 	  this._helper.onUpdate(func);
 	};
 
 	Segment.prototype.dataTransformer = function dataTransformer (func) {
+	  if (!this._helper) { return }
 	  this._helper.dataTransformer(func);
 	};
 
 	Segment.prototype.teardown = function teardown () {
+	  if (!this._helper) { return true }
 	  this.unlinkAll();
+	  this._helper.unobserve();
 	  delete this._helper;
 	  delete this.dataObserver;
+	  this.store.removeSegment(this);
+	  return true
 	};
 
 	Object.defineProperties( Segment.prototype, prototypeAccessors$1 );
@@ -1324,6 +1338,7 @@
 	  this.segments = [];
 	  this.dataObserver = new DataObserver(this);
 	  this.keySeperator = keySeperator;
+	  this.onUpdateEvents = [];
 	};
 
 	Clearx.prototype.triggerEvents = function triggerEvents (key) {
@@ -1334,7 +1349,10 @@
 	    var status = ref[0];
 	    var changed = ref[1];
 
-	  if (changed) { this.triggerEvents(key); }
+	  if (changed) {
+	    this.triggerEvents(key);
+	  }
+	  this.executeOnUpdateEvents(changed, key);
 	  return status
 	};
 
@@ -1474,6 +1492,24 @@
 	    segment.teardown();
 	    this.segments.splice(index, 1);
 	  }
+	};
+
+	Clearx.prototype.onUpdate = function onUpdate (func) {
+	  if (typeof func === 'function') {
+	    this.onUpdateEvents.push(func);
+	  }
+	};
+
+	Clearx.prototype.executeOnUpdateEvents = function executeOnUpdateEvents (changed, changedKeys) {
+	    var this$1 = this;
+
+	  this.onUpdateEvents.forEach(function (func) {
+	    try {
+	      func(changed, changedKeys, this$1.data, this$1);
+	    } catch (ex) {
+	      console.log('onUpdate', func, changedKeys);
+	    }
+	  });
 	};
 
 	Clearx.prototype.teardown = function teardown () {

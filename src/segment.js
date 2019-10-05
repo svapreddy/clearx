@@ -32,22 +32,27 @@ class Segment {
   }
 
   get data () {
+    if (!this._helper) return {}
     return this._helper.data
   }
 
   get components () {
+    if (!this._helper) return []
     return this._helper.components.slice(0)
   }
 
   get active () {
+    if (!this._helper) return false
     return this._helper.hasDataListener
   }
 
   get afterUpdateEvents () {
+    if (!this._helper) return []
     return this._helper.afterUpdateEvents
   }
 
   get dataTransformers () {
+    if (!this._helper) return []
     return this._helper.dataTransformers
   }
 
@@ -85,6 +90,7 @@ class Segment {
   }
 
   sync (on = true) {
+    if (!this._helper) return false
     this.keepSyncing = on
     if (on && !this.active) {
       this._helper.observe(true)
@@ -92,24 +98,32 @@ class Segment {
     if (!on && this.active) {
       this._helper.unobserve()
     }
+    return true
   }
 
   unlinkAll () {
+    if (!this._helper) return
     this._helper.components.forEach(this.unlink.bind(this))
   }
 
   onUpdate (func) {
+    if (!this._helper) return
     this._helper.onUpdate(func)
   }
 
   dataTransformer (func) {
+    if (!this._helper) return
     this._helper.dataTransformer(func)
   }
 
   teardown () {
+    if (!this._helper) return true
     this.unlinkAll()
+    this._helper.unobserve()
     delete this._helper
     delete this.dataObserver
+    this.store.removeSegment(this)
+    return true
   }
 }
 

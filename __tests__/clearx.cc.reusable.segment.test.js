@@ -14,7 +14,7 @@ describe('Class Component using re-usable segment', () => {
   })
 
   afterAll(() => {
-    store.removeSegment(segment)
+    segment.teardown()
     store.teardown()
     expect(store.segments.length).toBe(0)
   })

@@ -8,6 +8,7 @@ class Clearx {
     this.segments = []
     this.dataObserver = new DataObserver(this)
     this.keySeperator = keySeperator
+    this.onUpdateEvents = []
   }
 
   triggerEvents (key) {
@@ -15,7 +16,10 @@ class Clearx {
   }
 
   executeUtil (key, [status, changed]) {
-    if (changed) this.triggerEvents(key)
+    if (changed) {
+      this.triggerEvents(key)
+    }
+    this.executeOnUpdateEvents(changed, key)
     return status
   }
 
@@ -132,6 +136,22 @@ class Clearx {
       segment.teardown()
       this.segments.splice(index, 1)
     }
+  }
+
+  onUpdate (func) {
+    if (typeof func === 'function') {
+      this.onUpdateEvents.push(func)
+    }
+  }
+
+  executeOnUpdateEvents (changed, changedKeys) {
+    this.onUpdateEvents.forEach((func) => {
+      try {
+        func(changed, changedKeys, this.data, this)
+      } catch (ex) {
+        console.log('onUpdate', func, changedKeys)
+      }
+    })
   }
 
   teardown () {

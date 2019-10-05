@@ -14,7 +14,7 @@ describe('Class Component using bind', () => {
   })
 
   afterEach(() => {
-    store.removeSegment(segment)
+    segment.teardown()
   })
 
   afterAll(() => {
