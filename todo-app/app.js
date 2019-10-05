@@ -1,16 +1,15 @@
 import React from 'react'
 import reactDOM from 'react-dom'
-const { useState, useEffect } = React
-const { render, unmountComponentAtNode } = reactDOM
 import './app.css'
 
 import store from './store'
+const { useState, useEffect } = React
+const { render, unmountComponentAtNode } = reactDOM
 
-const todoStore = store.paths("todos")
+const todoStore = store.paths('todos')
 
 const TodoApp = () => {
-  
-  const { data, unlinkComponent} = todoStore.linkComponent(useState())
+  const { data, unlinkComponent } = todoStore.linkComponent(useState())
 
   useEffect(() => unlinkComponent, [])
 
@@ -18,15 +17,15 @@ const TodoApp = () => {
   // console.log(store)
 
   return (
-    <div class="container">
-      <div class="header"> 
-        <h3 class="header-title">Todos</h3>
-        <button class="add-todo">Add Todo</button>
+    <div class='container'>
+      <div class='header'>
+        <h3 class='header-title'>Todos</h3>
+        <button class='add-todo'>Add Todo</button>
       </div>
-      <div class="content">
+      <div class='content'>
         {data.length}
       </div>
-      <div class="content">
+      <div class='content'>
         {data.join(', ')}
       </div>
     </div>

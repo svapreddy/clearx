@@ -5,6 +5,7 @@ class DataObserver {
     this.listeners = {}
     this.counter = 0
   }
+
   attachObserver (keys, listener) {
     if (!listener) return
     if (!keys || keys.length === 0) return
@@ -18,11 +19,12 @@ class DataObserver {
       delete this.listeners[id]
     }
   }
+
   dataUpdatedAt (changedKey) {
     const seperator = '>>'
     const targets = []
     const changedPath = split(changedKey).join(seperator)
-    for (let id in this.listeners) {
+    for (const id in this.listeners) {
       let { keys, listener } = this.listeners[id]
       keys = keys.filter((key) => {
         const keyPath = split(key).join(seperator)
@@ -38,6 +40,7 @@ class DataObserver {
       }
     })
   }
+
   teardown () {
     this.listeners = {}
   }

@@ -21,7 +21,7 @@ const serverOptions = {
   }
 }
 
-let defaultConfig = [{
+const defaultConfig = [{
   input: 'todo-app/app.js',
   plugins: [
     css({ output: path.join(distFolder, `/${bundleName}.css`) }),
@@ -39,7 +39,7 @@ let defaultConfig = [{
       namedExports: {
         'node_modules/react/react.js': ['useEffect', 'useState'],
         'node_modules/react-dom/index.js': ['render']
-      }  
+      }
     }),
     buble({
       objectAssign: 'Object.assign'

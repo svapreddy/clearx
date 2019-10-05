@@ -26,10 +26,10 @@ export const hasEqual = (obj1, obj2) => {
 export const split = (path, seperator = '.', escape = '\\') => {
   if (!path) return []
   if (Array.isArray(path)) return path
-  let keys = []
+  const keys = []
   let key = ''
   for (let i = 0, l = path.length; i < l; ++i) {
-    let charKey = path[i]
+    const charKey = path[i]
     if ((charKey === seperator) && (path[i - 1] !== escape)) {
       if (key.length > 0) {
         keys.push(toNumber(key))
@@ -67,7 +67,7 @@ export const set = (obj, keys, value, dontReplace) => {
   if (!keys || keys.length === 0) return [false, isDataUpdated]
 
   keys = split(keys)
-  let [key, next, ...remaining] = keys
+  const [key, next, ...remaining] = keys
   if (next !== undefined) {
     if (!obj.hasOwnProperty(key)) {
       const val = !isNaN(next) ? [] : {}
@@ -92,7 +92,7 @@ export const ensureExists = (obj, keys, value) => {
   return set(obj, keys, value, true)
 }
 
-const arrayMethods = [ 'push', 'pop', 'splice', 'shift', 'unshift', 'sort' ]
+const arrayMethods = ['push', 'pop', 'splice', 'shift', 'unshift', 'sort']
 
 export const arrayOps = (obj, keys, method, ...args) => {
   if (arrayMethods.indexOf(method) === -1) return false
@@ -101,7 +101,6 @@ export const arrayOps = (obj, keys, method, ...args) => {
     arr = []
     set(obj, keys, arr)
   }
-  const origLength = arr.length
   try {
     arr[method].apply(arr, args)
   } catch (ex) {
@@ -176,7 +175,7 @@ export const empty = (obj, keys) => {
       value.length = 0
       break
     case typeof value === 'object':
-      for (let i in value) {
+      for (const i in value) {
         if (value.hasOwnProperty(i)) {
           isDataUpdated = delete value[i] || isDataUpdated
         }
@@ -201,7 +200,7 @@ export const del = (obj, keys) => {
   if (obj === undefined) return [false, isDataUpdated]
   if (!keys || keys.length === 0) return [false, isDataUpdated]
   keys = split(keys)
-  let [key, ...remaining] = keys
+  const [key, ...remaining] = keys
   if (keys.length === 1) {
     if (Array.isArray(obj) && !isNaN(key)) {
       const len = obj.length

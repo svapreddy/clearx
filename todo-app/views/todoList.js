@@ -14,13 +14,14 @@ class TodoList extends React.Component {
       to: this
     })
   }
+
   render () {
-    let localStore = this.state.store
+    const localStore = this.state.store
     return (
       <>
         <h5>Data displayed here as part of Todo List View</h5>
-        <div class='todoCount'> { localStore.todos.length } </div>
-        { localStore.todos.map((item) => {
+        <div class='todoCount'> {localStore.todos.length} </div>
+        {localStore.todos.map((item) => {
           return (
             <TodoItem todo={item} />
           )

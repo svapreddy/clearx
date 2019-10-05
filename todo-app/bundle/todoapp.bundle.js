@@ -757,7 +757,7 @@
 	  return set(obj, keys, value, true)
 	};
 
-	var arrayMethods = [ 'push', 'pop', 'splice', 'shift', 'unshift', 'sort' ];
+	var arrayMethods = ['push', 'pop', 'splice', 'shift', 'unshift', 'sort'];
 
 	var arrayOps = function (obj, keys, method) {
 	  var args = [], len = arguments.length - 3;
@@ -769,7 +769,6 @@
 	    arr = [];
 	    set(obj, keys, arr);
 	  }
-	  var origLength = arr.length;
 	  try {
 	    arr[method].apply(arr, args);
 	  } catch (ex) {
@@ -917,13 +916,14 @@
 	};
 
 	var prototypeAccessors = { keys: { configurable: true } };
+
 	prototypeAccessors.keys.get = function () {
 	  var paths = this.paths;
 	  if (Array.isArray(paths)) { return paths }
 	  var keys = [];
-	  if (typeof paths === "string") {
+	  if (typeof paths === 'string') {
 	    keys = [split(paths, this.keySeperator)];
-	  } else if (paths.toString() === "[object Object]") {
+	  } else if (paths.toString() === '[object Object]') {
 	    for (var key in paths) {
 	      if (!paths.hasOwnProperty(key)) { continue }
 	      keys.push(split(paths[key], this.keySeperator));
@@ -933,6 +933,7 @@
 	  }
 	  return keys
 	};
+
 	SegmentHelper.prototype.observe = function observe () {
 	  if (this.components.length === 0) { return }
 	  if (this.cancelObserver) { return }
@@ -942,11 +943,13 @@
 	  var listener = this.updateComponents.bind(this);
 	  this.cancelDataListener = observer.attachObserver(keys, listener);
 	};
+
 	SegmentHelper.prototype.unobserve = function unobserve () {
 	  if (!this.cancelDataListener) { return }
 	  this.cancelDataListener();
 	  delete this.cancelDataListener;
 	};
+
 	SegmentHelper.prototype.listenUnmount = function listenUnmount (component, onUnmount) {
 	    var this$1 = this;
 
@@ -960,6 +963,7 @@
 	  };
 	  component.componentWillUnmount.__original = componentWillUnmount;
 	};
+
 	SegmentHelper.prototype.unlistenUnmount = function unlistenUnmount (component) {
 	  var componentWillUnmount = component.componentWillUnmount;
 	  if (!componentWillUnmount) { return }
@@ -967,33 +971,35 @@
 	  if (!original) { return }
 	  component.componentWillUnmount = original;
 	};
+
 	SegmentHelper.prototype.updateData = function updateData () {
 	    var this$1 = this;
 
 	  var data = {};
 	  var paths = this.paths;
 
-	  if (typeof paths === "string") {
-	      paths = split(paths, this.keySeperator);
-	      data = this.store.get(paths);
+	  if (typeof paths === 'string') {
+	    paths = split(paths, this.keySeperator);
+	    data = this.store.get(paths);
 	  } else if (Array.isArray(paths)) {
-	      data = paths.map(function (path) {
-	          var key = split(path, this$1.keySeperator);
-	          return this$1.store.get(key)
-	      });
+	    data = paths.map(function (path) {
+	      var key = split(path, this$1.keySeperator);
+	      return this$1.store.get(key)
+	    });
 	  } else {
-	      for (var key in paths) {
-	          var path = split(paths[key], this.keySeperator);
-	          data[key] = this.store.get(path);
-	      }
+	    for (var key in paths) {
+	      var path = split(paths[key], this.keySeperator);
+	      data[key] = this.store.get(path);
+	    }
 	  }
 
-	  if (typeof data === "object") {
-	      data = freezeObject(umd({}, data));
+	  if (typeof data === 'object') {
+	    data = freezeObject(umd({}, data));
 	  }
 
 	  this.data = data;
 	};
+
 	SegmentHelper.prototype.updateComponents = function updateComponents () {
 	    var this$1 = this;
 
@@ -1003,12 +1009,11 @@
 	  });
 	  this.executeAfterUpdate();
 	};
-	SegmentHelper.prototype.assignStateFC = function assignStateFC (component, initialAssignment) {
-	    var assign;
 
-	  var _, setState;
+	SegmentHelper.prototype.assignStateFC = function assignStateFC (component, initialAssignment) {
+	  var setState;
 	  if (Array.isArray(component)) {
-	    (assign = component, _ = assign[0], setState = assign[1]);
+	    setState = component[1];
 	  }
 	  if (!setState) { return }
 	  if (initialAssignment) { return true }
@@ -1016,6 +1021,7 @@
 	  component[0] = this.data;
 	  return true
 	};
+
 	SegmentHelper.prototype.assignStateCC = function assignStateCC (component, initialAssignment) {
 	  if (typeof component.setState !== 'function') { return }
 	  if (initialAssignment) {
@@ -1028,11 +1034,13 @@
 	  }
 	  return true
 	};
+
 	SegmentHelper.prototype.assignStateOthers = function assignStateOthers (component) {
-	  if (typeof component === "object") {
+	  if (typeof component === 'object') {
 	    component.data = this.data;
 	  }
 	};
+
 	SegmentHelper.prototype.assignState = function assignState (component, initial) {
 	    if ( initial === void 0 ) initial = false;
 
@@ -1042,6 +1050,7 @@
 	    this.assignStateOthers(component, initial);
 	  }
 	};
+
 	SegmentHelper.prototype.executeAfterUpdate = function executeAfterUpdate () {
 	    var this$1 = this;
 
@@ -1053,6 +1062,7 @@
 	    }
 	  });
 	};
+
 	SegmentHelper.prototype.addMark = function addMark (component, mark) {
 	  var comp = component;
 	  if (Array.isArray(component)) {
@@ -1060,6 +1070,7 @@
 	  }
 	  comp.__segment = mark;
 	};
+
 	SegmentHelper.prototype.removeMark = function removeMark (component) {
 	  var comp = component;
 	  if (Array.isArray(component)) {
@@ -1071,12 +1082,11 @@
 	Object.defineProperties( SegmentHelper.prototype, prototypeAccessors );
 
 	var Segment = function Segment (paths, id, keySeperator, store, dataObserver) {
-	    
 	  this.id = id || index_browser();
 	  this.paths = paths;
 
 	  this._helper = new SegmentHelper(paths, keySeperator, store, dataObserver);
-	    
+
 	  this.keySeperator = keySeperator;
 	  this.store = store;
 	  this.dataObserver = dataObserver;
@@ -1086,7 +1096,7 @@
 	var prototypeAccessors$1 = { data: { configurable: true },components: { configurable: true },afterUpdateEvents: { configurable: true } };
 
 	Segment.prototype.dataTransformer = function dataTransformer (func) {
-	  if (typeof func === "function") { this.dataTransformers.push(func); }
+	  if (typeof func === 'function') { this.dataTransformers.push(func); }
 	};
 
 	Segment.prototype.findComponent = function findComponent (search) {
@@ -1154,7 +1164,7 @@
 	};
 
 	Segment.prototype.onUpdate = function onUpdate (func) {
-	  if (typeof func === "function") {
+	  if (typeof func === 'function') {
 	    this._helper.afterUpdateEvents.push(func);
 	  }
 	};
@@ -1171,6 +1181,7 @@
 	  this.listeners = {};
 	  this.counter = 0;
 	};
+
 	DataObserver.prototype.attachObserver = function attachObserver (keys, listener) {
 	    var this$1 = this;
 
@@ -1186,6 +1197,7 @@
 	    delete this$1.listeners[id];
 	  }
 	};
+
 	DataObserver.prototype.dataUpdatedAt = function dataUpdatedAt (changedKey) {
 	  var seperator = '>>';
 	  var targets = [];
@@ -1211,6 +1223,7 @@
 	    }
 	  });
 	};
+
 	DataObserver.prototype.teardown = function teardown () {
 	  this.listeners = {};
 	};
@@ -1224,9 +1237,11 @@
 	  this.dataObserver = new DataObserver(this);
 	  this.keySeperator = keySeperator;
 	};
+
 	Clearx.prototype.triggerEvents = function triggerEvents (key) {
 	  this.dataObserver.dataUpdatedAt(key);
 	};
+
 	Clearx.prototype.executeUtil = function executeUtil (key, ref) {
 	    var status = ref[0];
 	    var changed = ref[1];
@@ -1234,79 +1249,99 @@
 	  if (changed) { this.triggerEvents(key); }
 	  return status
 	};
+
 	Clearx.prototype.get = function get$1 (key, defaultValue) {
 	  return get(this.data, key, defaultValue)
 	};
+
 	Clearx.prototype.set = function set$1 (key, value, doNotReplace) {
 	    if ( doNotReplace === void 0 ) doNotReplace = false;
 
 	  return this.executeUtil(key, set(this.data, key, value, doNotReplace))
 	};
+
 	Clearx.prototype.coalesce = function coalesce$1 (keys, defaultValue) {
 	  return coalesce(this.data, keys, defaultValue)
 	};
+
 	Clearx.prototype.empty = function empty$1 (key) {
 	  return this.executeUtil(key, empty(this.data, key))
 	};
+
 	Clearx.prototype.insert = function insert$1 (key, value, position) {
 	  return this.executeUtil(key, insert(this.data, key, value, position))
 	};
+
 	Clearx.prototype.push = function push$1 (key) {
 	    var values = [], len = arguments.length - 1;
 	    while ( len-- > 0 ) values[ len ] = arguments[ len + 1 ];
 
 	  return this.executeUtil(key, push.apply(void 0, [ this.data, key ].concat( values )))
 	};
+
 	Clearx.prototype.unshift = function unshift$1 (key) {
 	    var values = [], len = arguments.length - 1;
 	    while ( len-- > 0 ) values[ len ] = arguments[ len + 1 ];
 
 	  return this.executeUtil(key, unshift.apply(void 0, [ this.data, key ].concat( values )))
 	};
+
 	Clearx.prototype.pop = function pop$1 (key) {
 	  return this.executeUtil(key, pop(this.data, key))
 	};
+
 	Clearx.prototype.shift = function shift$1 (key) {
 	  return this.executeUtil(key, shift(this.data, key))
 	};
+
 	Clearx.prototype.splice = function splice$1 (key) {
 	    var args = [], len = arguments.length - 1;
 	    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
 
 	  return this.executeUtil(key, splice.apply(void 0, [ this.data, key ].concat( args )))
 	};
+
 	Clearx.prototype.sort = function sort$1 (key) {
 	    var args = [], len = arguments.length - 1;
 	    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
 
 	  return this.executeUtil(key, sort.apply(void 0, [ this.data, key ].concat( args )))
 	};
+
 	Clearx.prototype.ensureExists = function ensureExists$1 (key, defaultValue) {
 	  return this.executeUtil(key, ensureExists(this.data, key, defaultValue))
 	};
+
 	Clearx.prototype.delete = function delete$1 (key) {
 	  return this.executeUtil(key, del(this.data, key))
 	};
+
 	Clearx.prototype.has = function has$1 (key) {
 	  return has(this.data, key)
 	};
+
 	Clearx.prototype.merge = function merge$1 (key, data) {
 	  return this.executeUtil(key, merge(this.data, key, data))
 	};
+
 	Clearx.prototype.increment = function increment$1 (key, by) {
 	  return this.executeUtil(key, increment(this.data, key, by))
 	};
+
 	Clearx.prototype.decrement = function decrement$1 (key, by) {
 	  return this.executeUtil(key, decrement(this.data, key, by))
 	};
+
 	Clearx.prototype.toggle = function toggle$1 (key) {
 	  return this.executeUtil(key, toggle(this.data, key))
 	};
+
 	Clearx.prototype.paths = function paths (keys, id, keySeperator) {
 	  var segment = new Segment(keys, id, keySeperator || this.keySeperator, this, this.dataObserver);
 	  this.segments.push(segment);
 	  return segment
 	};
+
 	Clearx.prototype.bind = function bind (options) {
 	    if ( options === void 0 ) options = {};
 
@@ -1333,10 +1368,12 @@
 	  }
 	  return segment
 	};
+
 	Clearx.prototype.destroySegment = function destroySegment (segment) {
 	  var index = this.segments.indexOf(segment);
 	  if (index > -1) { this.segments.splice(index, 1); }
 	};
+
 	Clearx.prototype.destroy = function destroy () {
 	  this.segments.forEach(function (segment) {
 	    segment.teardown();
@@ -1358,10 +1395,9 @@
 	var render = reactDom.render;
 	var unmountComponentAtNode = reactDom.unmountComponentAtNode;
 
-	var todoStore = store.paths("todos");
+	var todoStore = store.paths('todos');
 
 	var TodoApp = function () {
-	  
 	  var ref = todoStore.linkComponent(useState());
 	  var data = ref.data;
 	  var unlinkComponent = ref.unlinkComponent;
@@ -1372,15 +1408,15 @@
 	  // console.log(store)
 
 	  return (
-	    react.createElement( 'div', { class: "container" },
-	      react.createElement( 'div', { class: "header" },  
-	        react.createElement( 'h3', { class: "header-title" }, "Todos"),
-	        react.createElement( 'button', { class: "add-todo" }, "Add Todo")
+	    react.createElement( 'div', { class: 'container' },
+	      react.createElement( 'div', { class: 'header' },
+	        react.createElement( 'h3', { class: 'header-title' }, "Todos"),
+	        react.createElement( 'button', { class: 'add-todo' }, "Add Todo")
 	      ),
-	      react.createElement( 'div', { class: "content" },
+	      react.createElement( 'div', { class: 'content' },
 	        data.length
 	      ),
-	      react.createElement( 'div', { class: "content" },
+	      react.createElement( 'div', { class: 'content' },
 	        data.join(', ')
 	      )
 	    )

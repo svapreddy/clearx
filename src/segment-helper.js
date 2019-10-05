@@ -10,14 +10,15 @@ class SegmentHelper {
     this.components = []
     this.afterUpdateEvents = []
   }
+
   get keys () {
     const paths = this.paths
     if (Array.isArray(paths)) return paths
     let keys = []
-    if (typeof paths === "string") {
+    if (typeof paths === 'string') {
       keys = [split(paths, this.keySeperator)]
-    } else if (paths.toString() === "[object Object]") {
-      for (let key in paths) {
+    } else if (paths.toString() === '[object Object]') {
+      for (const key in paths) {
         if (!paths.hasOwnProperty(key)) continue
         keys.push(split(paths[key], this.keySeperator))
       }
@@ -26,6 +27,7 @@ class SegmentHelper {
     }
     return keys
   }
+
   observe () {
     if (this.components.length === 0) return
     if (this.cancelObserver) return
@@ -35,11 +37,13 @@ class SegmentHelper {
     const listener = this.updateComponents.bind(this)
     this.cancelDataListener = observer.attachObserver(keys, listener)
   }
+
   unobserve () {
     if (!this.cancelDataListener) return
     this.cancelDataListener()
     delete this.cancelDataListener
   }
+
   listenUnmount (component, onUnmount) {
     if (Array.isArray(component)) return () => {}
     const componentWillUnmount = component.componentWillUnmount
@@ -51,6 +55,7 @@ class SegmentHelper {
     }
     component.componentWillUnmount.__original = componentWillUnmount
   }
+
   unlistenUnmount (component) {
     const componentWillUnmount = component.componentWillUnmount
     if (!componentWillUnmount) return
@@ -58,31 +63,33 @@ class SegmentHelper {
     if (!original) return
     component.componentWillUnmount = original
   }
+
   updateData () {
     let data = {}
     let paths = this.paths
 
-    if (typeof paths === "string") {
-        paths = split(paths, this.keySeperator)
-        data = this.store.get(paths)
+    if (typeof paths === 'string') {
+      paths = split(paths, this.keySeperator)
+      data = this.store.get(paths)
     } else if (Array.isArray(paths)) {
-        data = paths.map((path) => {
-            let key = split(path, this.keySeperator)
-            return this.store.get(key)
-        })
+      data = paths.map((path) => {
+        const key = split(path, this.keySeperator)
+        return this.store.get(key)
+      })
     } else {
-        for (let key in paths) {
-            let path = split(paths[key], this.keySeperator)
-            data[key] = this.store.get(path)
-        }
+      for (const key in paths) {
+        const path = split(paths[key], this.keySeperator)
+        data[key] = this.store.get(path)
+      }
     }
 
-    if (typeof data === "object") {
-        data = freezeObject(deepmerge({}, data))
+    if (typeof data === 'object') {
+      data = freezeObject(deepmerge({}, data))
     }
 
     this.data = data
   }
+
   updateComponents () {
     this.updateData()
     this.components.forEach((component) => {
@@ -90,10 +97,11 @@ class SegmentHelper {
     })
     this.executeAfterUpdate()
   }
+
   assignStateFC (component, initialAssignment) {
-    let _, setState
+    let setState
     if (Array.isArray(component)) {
-      [_, setState] = component
+      setState = component[1]
     }
     if (!setState) return
     if (initialAssignment) return true
@@ -101,6 +109,7 @@ class SegmentHelper {
     component[0] = this.data
     return true
   }
+
   assignStateCC (component, initialAssignment) {
     if (typeof component.setState !== 'function') return
     if (initialAssignment) {
@@ -113,11 +122,13 @@ class SegmentHelper {
     }
     return true
   }
+
   assignStateOthers (component) {
-    if (typeof component === "object") {
+    if (typeof component === 'object') {
       component.data = this.data
     }
   }
+
   assignState (component, initial = false) {
     const updatedSC = this.assignStateFC(component, initial)
     const updatedCC = this.assignStateCC(component, initial)
@@ -125,6 +136,7 @@ class SegmentHelper {
       this.assignStateOthers(component, initial)
     }
   }
+
   executeAfterUpdate () {
     this.afterUpdateEvents.forEach((func) => {
       try {
@@ -134,6 +146,7 @@ class SegmentHelper {
       }
     })
   }
+
   addMark (component, mark) {
     let comp = component
     if (Array.isArray(component)) {
@@ -141,6 +154,7 @@ class SegmentHelper {
     }
     comp.__segment = mark
   }
+
   removeMark (component) {
     let comp = component
     if (Array.isArray(component)) {

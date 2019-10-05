@@ -3,12 +3,11 @@ import SegmentHelper from './segment-helper'
 
 class Segment {
   constructor (paths, id, keySeperator, store, dataObserver) {
-    
     this.id = id || nanoid()
     this.paths = paths
 
     this._helper = new SegmentHelper(paths, keySeperator, store, dataObserver)
-    
+
     this.keySeperator = keySeperator
     this.store = store
     this.dataObserver = dataObserver
@@ -16,7 +15,7 @@ class Segment {
   }
 
   dataTransformer (func) {
-    if (typeof func === "function") this.dataTransformers.push(func)
+    if (typeof func === 'function') this.dataTransformers.push(func)
   }
 
   findComponent (search) {
@@ -84,7 +83,7 @@ class Segment {
   }
 
   onUpdate (func) {
-    if (typeof func === "function") {
+    if (typeof func === 'function') {
       this._helper.afterUpdateEvents.push(func)
     }
   }
