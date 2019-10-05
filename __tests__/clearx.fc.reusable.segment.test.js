@@ -2,20 +2,21 @@ import React from 'react'
 import { act } from 'react-dom/test-utils'
 import { render } from '@testing-library/react'
 import store from './fixures/store'
-import Component from './fixures/fc-comp'
-import { func } from 'prop-types'
+import Component from './fixures/fc-comp-reusable-segment'
 
-describe('Function Component', () => {
+describe('Function Component using re-usable segment', () => {
   let rendered, segment, component
 
   beforeEach(() => {
     rendered = render(<Component />)
-    segment = store.segments[0]
-    component = segment.components[0]
+    segment = store.segments[store.segments.length - 1]
+    component = segment.components[segment.components.length - 1]
   })
 
-  afterEach(() => {
-    store.destroySegment(segment)
+  afterAll(() => {
+    store.removeSegment(segment)
+    store.teardown()
+    expect(store.segments.length).toBe(0)
   })
 
   describe('Component receives the data from store', () => {
@@ -24,9 +25,7 @@ describe('Function Component', () => {
       it('should not observe data changes', () => {
         expect(segment.active).toBe(true)
       })
-      it('has one segment created', () => {
-        expect(store.segments.length).toBe(1)
-      })
+      
       it('component is stored', () => {
         expect(Array.isArray(component)).toBe(true)
         expect(component[1].__segment).toBe(segment)
@@ -36,48 +35,52 @@ describe('Function Component', () => {
       it('when same component is linked to same segment, it should not duplicate segment', () => {
         let result
         act(() => {
-          result = segment.linkComponent(component)
+          result = segment.link(component)
         })
         expect(store.segments.length).toBe(1)
         expect(segment.data).toBe(result.data)
       })
+
       it('segment has components array', () => {
         expect(segment.components).toStrictEqual([component])
       })
 
-      // it('runs onUpdate callback', () => {
-      //   const fn = jest.fn()
-      //   segment.onUpdate(fn)
-      //   act(() => {
-      //     store.set('test', 2)
-      //   })
-      //   expect(fn).toHaveBeenCalled()
-      // })
-
-      // it('runs data transformer callback', () => {
-      //   const fn = (data) => {
-      //     data.test *= 100
-      //   }
-      //   segment.dataTransformer(fn)
-      //   const {data, unlinkComponent} = segment.linkComponent(component)
-      //   expect(data.test).toBe(200)
-      // })
-      it('when unlinked, component should be removed from segment', () => {
-        const {data, unlinkComponent} = segment.linkComponent(component)
+      it('runs onUpdate callback', () => {
+        const fn = jest.fn()
+        segment.onUpdate(fn)
         act(() => {
-          unlinkComponent()
+          store.set('test', 2)
+        })
+        expect(fn).toHaveBeenCalled()
+      })
+
+      it('runs data transformer callback', () => {
+        const fn = (data) => {
+          data.test *= 100
+          return data
+        }
+        act(() => {
+          segment.dataTransformer(fn)
+          segment.link(component)
+        })
+        const {data, unlink} = segment.link(component)
+        expect(data.test).toBe(200)
+      })
+
+      it('when unlinked, component should be removed from segment', () => {
+        const {data, unlink} = segment.link(component)
+        act(() => {
+          unlink()
         })
         expect(component[1].__segment).toBe(undefined)
         expect(segment.findComponent(component)).toBe(-1)
       })
       it('if segment does not have any components, should not observe changes', () => {
-        expect(segment.active).toBe(false)
-      })
-
-      describe('segment teardown', () => {
-        it('should remove stored config', () => {
-          expect(segment._helper).toBe(undefined)
+        const {data, unlink} = segment.link(component)
+        act(() => {
+          unlink()
         })
+        expect(segment.active).toBe(false)
       })
 
     })
@@ -106,7 +109,9 @@ describe('Function Component', () => {
         expect(rendered.getByTestId('active').textContent).toBe('false')
       })
       it('if called on non existen key, should set true', () => {
-        store.toggle('profile.non')
+        act(() => {
+          store.toggle('profile.non')
+        })
         expect(store.get('profile.non')).toBe(true)
       })
     })
@@ -215,12 +220,16 @@ describe('Function Component', () => {
       })
 
       it('should create non existing key', () => {
-        store.set('a.b.c.d.e.f.e', 'test')
+        act(() => {
+          store.set('a.b.c.d.e.f.e', 'test')
+        })
         expect(store.get('a.b.c.d.e.f.e')).toBe('test')
       })
 
       it('should create non existing key and array if key has number ', () => {
-        store.set('a.b.c.d.e.f.x.0', 'test')
+        act(() => {
+          store.set('a.b.c.d.e.f.x.0', 'test')
+        })
         expect(store.get('a.b.c.d.e.f.x')).toStrictEqual(['test'])
       })
     })
@@ -352,7 +361,9 @@ describe('Function Component', () => {
 
     describe('#slice', () => {
       it('should return subarray', () => {
-        store.set('test-a', [1, 2, 3, 4, 5])
+        act(() => {
+          store.set('test-a', [1, 2, 3, 4, 5])
+        })
         expect(store.slice('test-a', 0, 2)).toStrictEqual([1, 2])
       })
     })

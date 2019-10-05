@@ -10,9 +10,10 @@ const { render, unmountComponentAtNode } = reactDOM
 const todoStore = store.paths(['todos', 'count'])
 
 const TodoApp = () => {
-  const { data, unlinkComponent } = todoStore.linkComponent(useState())
 
-  useEffect(() => unlinkComponent, [])
+  const { data, unlink } = todoStore.link(useState())
+
+  useEffect(() => unlink, [])
 
   console.log(data)
   console.log(store)
@@ -27,20 +28,33 @@ const TodoApp = () => {
         {data.length}
       </div>
       <div class='content'>
-        {data.join(', ')}
+        { data[1] }
       </div>
     </div>
   )
 }
 
+todoStore.onUpdate((data) => {
+  console.log('data updated', data)
+})
+
+todoStore.dataTransformer((data) => {
+  data[1] *= 2
+  return data
+})
+
+todoStore.dataTransformer((data) => {
+  data[1] /= 2
+  return data
+})
+
 store.ensureExists('profile.age', 30)
 
 console.log(store.merge('test', {a: 1}))
 
-// setInterval(() => {
-//   store.increment('count', 100)
-//   store.push('todos', Date.now())
-// }, 1000)
+setInterval(() => {
+  unmountComponentAtNode(document.body)
+}, 1000)
 
 // setInterval(() => {
 //   store.decrement('count', 45)

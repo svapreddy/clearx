@@ -13,11 +13,8 @@ class Segment {
     this.dataObserver = dataObserver
   }
 
-  dataTransformer (func) {
-    this._helper.dataTransformer(func)
-  }
-
   findComponent (search) {
+    if (!this._helper) return -1
     if (Array.isArray(search)) {
       search = search[1]
     }
@@ -34,29 +31,8 @@ class Segment {
     return -1
   }
 
-  linkComponent (component) {
-    if (!component) return
-    const helper = this._helper
-    const unlinkComponent = this.unlinkComponent.bind(this, component)
-    const retObject = {
-      data: this.data,
-      unlinkComponent
-    }
-    if (this.findComponent(component) > -1) return retObject
-    helper.components.push(component)
-    helper.observe()
-    helper.addMark(component, this)
-    helper.listenUnmount(component, unlinkComponent)
-    helper.assignState(component, true)
-    return retObject
-  }
-
   get data () {
-    const helper = this._helper
-    if (!helper.data) {
-      helper.updateData()
-    }
-    return helper.data
+    return this._helper.data
   }
 
   get components () {
@@ -75,9 +51,28 @@ class Segment {
     return this._helper.dataTransformers
   }
 
-  unlinkComponent (component) {
+  link (component) {
+    if (!component) return {}
+    const helper = this._helper
+    if (!helper) return {}
+    const unlink = this.unlink.bind(this, component)
+    const retObject = {
+      data: this.data,
+      unlink
+    }
+    if (this.findComponent(component) > -1) return retObject
+    helper.components.push(component)
+    helper.observe()
+    helper.addMark(component, this)
+    helper.listenUnmount(component, unlink)
+    helper.assignState(component, true)
+    return retObject
+  }
+
+  unlink (component) {
     if (!component) return
     const helper = this._helper
+    if (!helper) return
     const idx = this.findComponent(component)
     if (idx > -1) {
       helper.removeMark(component)
@@ -89,13 +84,20 @@ class Segment {
     }
   }
 
+  unlinkAll () {
+    this._helper.components.forEach(this.unlink.bind(this))
+  }
+
   onUpdate (func) {
-    if (typeof func === 'function') {
-      this._helper.afterUpdateEvents.push(func)
-    }
+    this._helper.onUpdate(func)
+  }
+
+  dataTransformer (func) {
+    this._helper.dataTransformer(func)
   }
 
   teardown () {
+    this.unlinkAll()
     delete this._helper
     delete this.dataObserver
   }

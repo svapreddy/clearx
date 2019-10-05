@@ -114,11 +114,11 @@ class Clearx {
     let segment
     segment = component.__segment
     if (segment) {
-      return segment.linkComponent(to)
+      return segment.link(to)
     }
     segment = this.paths(paths, id, keySeperator)
     segment.onUpdate(afterUpdate)
-    const link = segment.linkComponent(to)
+    const link = segment.link(to)
 
     if (Array.isArray(to)) {
       return link
@@ -126,16 +126,20 @@ class Clearx {
     return segment
   }
 
-  destroySegment (segment) {
+  removeSegment (segment) {
     const index = this.segments.indexOf(segment)
-    if (index > -1) this.segments.splice(index, 1)
+    if (index > -1) {
+      segment.teardown()
+      this.segments.splice(index, 1)
+    }
   }
 
-  destroy () {
+  teardown () {
     this.segments.forEach((segment) => {
       segment.teardown()
     })
     this.dataObserver.teardown()
+    delete this.dataObserver
     this.data = {}
   }
 }

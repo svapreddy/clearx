@@ -1,25 +1,24 @@
 import React, { useEffect, useState, Fragment } from 'react'
 import store from './store'
 
-const Component = () => {
-    const { data, destroy } = store.bind({
-        paths: {
-            numbers: 'nums',
-            testArr: 'profile.testArr',
-            counter: 'profile.counter',
-            name: 'profile.name',
-            active: 'profile.active',
-            age: 'profile.age',
-            keyWithDot: 'key\\.has\\.dots\\.in\\.it',
-            testObj: 'profile.testObj',
-            lastName: 'profile.lastName',
-            names: 'names',
-            test: 'test'
-        },
-        to: useState()
-    })
+const randomData = store.paths({
+    numbers: 'nums',
+    testArr: 'profile.testArr',
+    counter: 'profile.counter',
+    name: 'profile.name',
+    active: 'profile.active',
+    age: 'profile.age',
+    keyWithDot: 'key\\.has\\.dots\\.in\\.it',
+    testObj: 'profile.testObj',
+    lastName: 'profile.lastName',
+    names: 'names',
+    test: 'test'
+})
 
-    useEffect(() => destroy, [])
+const Component = () => {
+    const { data, unlink } = randomData.link(useState())
+
+    useEffect(() => unlink, [])
 
     return (
         <Fragment>

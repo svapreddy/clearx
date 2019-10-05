@@ -65,6 +65,17 @@ class SegmentHelper {
     component.componentWillUnmount = original
   }
 
+  dataTransformer (func) {
+    if (typeof func === "function") {
+      this._dataTransformers.push(func)
+      this.updateComponents()
+    }
+  }
+
+  get dataTransformers () {
+    return this._dataTransformers.slice(0)
+  }
+
   applyDataTransformers (data) {
     this._dataTransformers.forEach((func) => {
       try {
@@ -101,7 +112,14 @@ class SegmentHelper {
       data = freezeObject(deepmerge({}, data))
     }
 
-    this.data = data
+    this._data = data
+  }
+
+  get data () {
+    if (!this._data) {
+      this.updateData()
+    }
+    return this._data
   }
 
   updateComponents () {
@@ -151,6 +169,16 @@ class SegmentHelper {
     }
   }
 
+  onUpdate (func) {
+    if (typeof func === 'function') {
+      this._afterUpdateEvents.push(func)
+    }
+  }
+
+  get afterUpdateEvents () {
+    return this._afterUpdateEvents.slice(0)
+  }
+
   executeAfterUpdate () {
     this._afterUpdateEvents.forEach((func) => {
       try {
@@ -161,23 +189,8 @@ class SegmentHelper {
     })
   }
 
-  get afterUpdateEvents () {
-    return this._afterUpdateEvents.slice(0)
-  }
-  
-  get dataTransformers () {
-    return this._dataTransformers.slice(0)
-  }
-
   get hasDataListener () {
     return !!this.cancelDataListener
-  }
-
-  dataTransformer (func) {
-    if (typeof func === "function") {
-      this._dataTransformers.push(func)
-      this.updateComponents()
-    }
   }
 
   addMark (component, mark) {

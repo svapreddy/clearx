@@ -937,7 +937,7 @@
 	  this._dataTransformers = [];
 	};
 
-	var prototypeAccessors = { keys: { configurable: true },afterUpdateEvents: { configurable: true },dataTransformers: { configurable: true },hasDataListener: { configurable: true } };
+	var prototypeAccessors = { keys: { configurable: true },dataTransformers: { configurable: true },data: { configurable: true },afterUpdateEvents: { configurable: true },hasDataListener: { configurable: true } };
 
 	prototypeAccessors.keys.get = function () {
 	  var paths = this.paths;
@@ -994,6 +994,17 @@
 	  component.componentWillUnmount = original;
 	};
 
+	SegmentHelper.prototype.dataTransformer = function dataTransformer (func) {
+	  if (typeof func === "function") {
+	    this._dataTransformers.push(func);
+	    this.updateComponents();
+	  }
+	};
+
+	prototypeAccessors.dataTransformers.get = function () {
+	  return this._dataTransformers.slice(0)
+	};
+
 	SegmentHelper.prototype.applyDataTransformers = function applyDataTransformers (data) {
 	  this._dataTransformers.forEach(function (func) {
 	    try {
@@ -1032,7 +1043,14 @@
 	    data = freezeObject(umd({}, data));
 	  }
 
-	  this.data = data;
+	  this._data = data;
+	};
+
+	prototypeAccessors.data.get = function () {
+	  if (!this._data) {
+	    this.updateData();
+	  }
+	  return this._data
 	};
 
 	SegmentHelper.prototype.updateComponents = function updateComponents () {
@@ -1086,6 +1104,16 @@
 	  }
 	};
 
+	SegmentHelper.prototype.onUpdate = function onUpdate (func) {
+	  if (typeof func === 'function') {
+	    this._afterUpdateEvents.push(func);
+	  }
+	};
+
+	prototypeAccessors.afterUpdateEvents.get = function () {
+	  return this._afterUpdateEvents.slice(0)
+	};
+
 	SegmentHelper.prototype.executeAfterUpdate = function executeAfterUpdate () {
 	    var this$1 = this;
 
@@ -1098,23 +1126,8 @@
 	  });
 	};
 
-	prototypeAccessors.afterUpdateEvents.get = function () {
-	  return this._afterUpdateEvents.slice(0)
-	};
-	  
-	prototypeAccessors.dataTransformers.get = function () {
-	  return this._dataTransformers.slice(0)
-	};
-
 	prototypeAccessors.hasDataListener.get = function () {
 	  return !!this.cancelDataListener
-	};
-
-	SegmentHelper.prototype.dataTransformer = function dataTransformer (func) {
-	  if (typeof func === "function") {
-	    this._dataTransformers.push(func);
-	    this.updateComponents();
-	  }
 	};
 
 	SegmentHelper.prototype.addMark = function addMark (component, mark) {
@@ -1148,11 +1161,8 @@
 
 	var prototypeAccessors$1 = { data: { configurable: true },components: { configurable: true },active: { configurable: true },afterUpdateEvents: { configurable: true },dataTransformers: { configurable: true } };
 
-	Segment.prototype.dataTransformer = function dataTransformer (func) {
-	  this._helper.dataTransformer(func);
-	};
-
 	Segment.prototype.findComponent = function findComponent (search) {
+	  if (!this._helper) { return -1 }
 	  if (Array.isArray(search)) {
 	    search = search[1];
 	  }
@@ -1169,29 +1179,8 @@
 	  return -1
 	};
 
-	Segment.prototype.linkComponent = function linkComponent (component) {
-	  if (!component) { return }
-	  var helper = this._helper;
-	  var unlinkComponent = this.unlinkComponent.bind(this, component);
-	  var retObject = {
-	    data: this.data,
-	    unlinkComponent: unlinkComponent
-	  };
-	  if (this.findComponent(component) > -1) { return retObject }
-	  helper.components.push(component);
-	  helper.observe();
-	  helper.addMark(component, this);
-	  helper.listenUnmount(component, unlinkComponent);
-	  helper.assignState(component, true);
-	  return retObject
-	};
-
 	prototypeAccessors$1.data.get = function () {
-	  var helper = this._helper;
-	  if (!helper.data) {
-	    helper.updateData();
-	  }
-	  return helper.data
+	  return this._helper.data
 	};
 
 	prototypeAccessors$1.components.get = function () {
@@ -1210,9 +1199,28 @@
 	  return this._helper.dataTransformers
 	};
 
-	Segment.prototype.unlinkComponent = function unlinkComponent (component) {
+	Segment.prototype.link = function link (component) {
+	  if (!component) { return {} }
+	  var helper = this._helper;
+	  if (!helper) { return {} }
+	  var unlink = this.unlink.bind(this, component);
+	  var retObject = {
+	    data: this.data,
+	    unlink: unlink
+	  };
+	  if (this.findComponent(component) > -1) { return retObject }
+	  helper.components.push(component);
+	  helper.observe();
+	  helper.addMark(component, this);
+	  helper.listenUnmount(component, unlink);
+	  helper.assignState(component, true);
+	  return retObject
+	};
+
+	Segment.prototype.unlink = function unlink (component) {
 	  if (!component) { return }
 	  var helper = this._helper;
+	  if (!helper) { return }
 	  var idx = this.findComponent(component);
 	  if (idx > -1) {
 	    helper.removeMark(component);
@@ -1224,13 +1232,20 @@
 	  }
 	};
 
+	Segment.prototype.unlinkAll = function unlinkAll () {
+	  this._helper.components.forEach(this.unlink.bind(this));
+	};
+
 	Segment.prototype.onUpdate = function onUpdate (func) {
-	  if (typeof func === 'function') {
-	    this._helper.afterUpdateEvents.push(func);
-	  }
+	  this._helper.onUpdate(func);
+	};
+
+	Segment.prototype.dataTransformer = function dataTransformer (func) {
+	  this._helper.dataTransformer(func);
 	};
 
 	Segment.prototype.teardown = function teardown () {
+	  this.unlinkAll();
 	  delete this._helper;
 	  delete this.dataObserver;
 	};
@@ -1429,11 +1444,11 @@
 	  var segment;
 	  segment = component.__segment;
 	  if (segment) {
-	    return segment.linkComponent(to)
+	    return segment.link(to)
 	  }
 	  segment = this.paths(paths, id, keySeperator);
 	  segment.onUpdate(afterUpdate);
-	  var link = segment.linkComponent(to);
+	  var link = segment.link(to);
 
 	  if (Array.isArray(to)) {
 	    return link
@@ -1441,16 +1456,20 @@
 	  return segment
 	};
 
-	Clearx.prototype.destroySegment = function destroySegment (segment) {
+	Clearx.prototype.removeSegment = function removeSegment (segment) {
 	  var index = this.segments.indexOf(segment);
-	  if (index > -1) { this.segments.splice(index, 1); }
+	  if (index > -1) {
+	    segment.teardown();
+	    this.segments.splice(index, 1);
+	  }
 	};
 
-	Clearx.prototype.destroy = function destroy () {
+	Clearx.prototype.teardown = function teardown () {
 	  this.segments.forEach(function (segment) {
 	    segment.teardown();
 	  });
 	  this.dataObserver.teardown();
+	  delete this.dataObserver;
 	  this.data = {};
 	};
 
@@ -1471,11 +1490,12 @@
 	var todoStore = store.paths(['todos', 'count']);
 
 	var TodoApp = function () {
-	  var ref = todoStore.linkComponent(useState());
-	  var data = ref.data;
-	  var unlinkComponent = ref.unlinkComponent;
 
-	  useEffect(function () { return unlinkComponent; }, []);
+	  var ref = todoStore.link(useState());
+	  var data = ref.data;
+	  var unlink = ref.unlink;
+
+	  useEffect(function () { return unlink; }, []);
 
 	  console.log(data);
 	  console.log(store);
@@ -1490,20 +1510,33 @@
 	        data.length
 	      ),
 	      react.createElement( 'div', { class: 'content' },
-	        data.join(', ')
+	        data[1]
 	      )
 	    )
 	  )
 	};
 
+	todoStore.onUpdate(function (data) {
+	  console.log('data updated', data);
+	});
+
+	todoStore.dataTransformer(function (data) {
+	  data[1] *= 2;
+	  return data
+	});
+
+	todoStore.dataTransformer(function (data) {
+	  data[1] /= 2;
+	  return data
+	});
+
 	store.ensureExists('profile.age', 30);
 
 	console.log(store.merge('test', {a: 1}));
 
-	// setInterval(() => {
-	//   store.increment('count', 100)
-	//   store.push('todos', Date.now())
-	// }, 1000)
+	setInterval(function () {
+	  unmountComponentAtNode(document.body);
+	}, 1000);
 
 	// setInterval(() => {
 	//   store.decrement('count', 45)
