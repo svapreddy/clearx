@@ -489,6 +489,24 @@
 	});
 	var reactDom_1 = reactDom.render;
 
+	var crypto = self.crypto || self.msCrypto;
+
+	/*
+	 * This alphabet uses a-z A-Z 0-9 _- symbols.
+	 * Symbols order was changed for better gzip compression.
+	 */
+	var url = 'Uint8ArdomValuesObj012345679BCDEFGHIJKLMNPQRSTWXYZ_cfghkpqvwxyz-';
+
+	var index_browser = function (size) {
+	  size = size || 21;
+	  var id = '';
+	  var bytes = crypto.getRandomValues(new Uint8Array(size));
+	  while (0 < size--) {
+	    id += url[bytes[size] & 63];
+	  }
+	  return id
+	};
+
 	var umd = createCommonjsModule(function (module, exports) {
 	(function (global, factory) {
 		module.exports = factory();
@@ -887,139 +905,266 @@
 	  return set(obj, keys, umd(get(obj, keys), data))
 	};
 
-	var Segment = function Segment (config, store, dataObserver) {
-	  this.config = config;
+	var SegmentHelper = function SegmentHelper (paths, keySeperator, store, dataObserver) {
+	  if ( keySeperator === void 0 ) keySeperator = '.';
+
+	  this.paths = paths;
+	  this.keySeperator = keySeperator;
 	  this.store = store;
 	  this.dataObserver = dataObserver;
-	  this.detachListeners = function () {};
-	  this.keySeperator = '.';
-	  this.listeningKeys = {};
-	  this.bootstrap();
-	  this.active = true;
+	  this.components = [];
+	  this.afterUpdateEvents = [];
 	};
 
-	var prototypeAccessors = { data: { configurable: true } };
-	Segment.prototype.attachListeners = function attachListeners () {
-	  var dataChanges = this.listenDataChanges();
-	  var onUnmount = this.listenUnmount();
-	  return function () {
-	    dataChanges();
-	    onUnmount();
-	  }
-	};
-	Segment.prototype.normalizePaths = function normalizePaths () {
-	  var listeningKeys = {};
-	  var paths = this.config.paths;
-	  for (var key in paths) {
-	    if (paths.hasOwnProperty(key)) {
-	      listeningKeys[key] = split(paths[key], this.keySeperator);
+	var prototypeAccessors = { keys: { configurable: true } };
+	prototypeAccessors.keys.get = function () {
+	  var paths = this.paths;
+	  if (Array.isArray(paths)) { return paths }
+	  var keys = [];
+	  if (typeof paths === "string") {
+	    keys = [split(paths, this.keySeperator)];
+	  } else if (paths.toString() === "[object Object]") {
+	    for (var key in paths) {
+	      if (!paths.hasOwnProperty(key)) { continue }
+	      keys.push(split(paths[key], this.keySeperator));
 	    }
+	  } else {
+	    return paths
 	  }
-	  this.listeningKeys = listeningKeys;
+	  return keys
 	};
-	Segment.prototype.listenDataChanges = function listenDataChanges () {
-	  var listeningKeys = Object.values(this.listeningKeys);
-	  var cacelObserver = this.dataObserver.attachObserver(listeningKeys, this.dataUpdated.bind(this));
-	  return function () {
-	    cacelObserver();
-	  }
+	SegmentHelper.prototype.observe = function observe () {
+	  if (this.components.length === 0) { return }
+	  if (this.cancelObserver) { return }
+
+	  var observer = this.dataObserver;
+	  var keys = this.keys;
+	  var listener = this.updateComponents.bind(this);
+	  this.cancelDataListener = observer.attachObserver(keys, listener);
 	};
-	Segment.prototype.listenUnmount = function listenUnmount () {
+	SegmentHelper.prototype.unobserve = function unobserve () {
+	  if (!this.cancelDataListener) { return }
+	  this.cancelDataListener();
+	  delete this.cancelDataListener;
+	};
+	SegmentHelper.prototype.listenUnmount = function listenUnmount (component, onUnmount) {
 	    var this$1 = this;
 
-	  var target = this.config.to;
-	  if (Array.isArray(target)) { return function () {} }
-	  this.componentWillUnmount = target.componentWillUnmount;
-	  target.componentWillUnmount = function () {
-	    this$1.destroy();
+	  if (Array.isArray(component)) { return function () {} }
+	  var componentWillUnmount = component.componentWillUnmount;
+	  component.componentWillUnmount = function () {
+	    onUnmount();
 	    if (typeof this$1.componentWillUnmount === 'function') {
-	      this$1.componentWillUnmount.call(target);
+	      this$1.componentWillUnmount.call(component);
 	    }
 	  };
-	  return function () {
-	    target.componentWillUnmount = this$1.componentWillUnmount;
-	    delete this$1.componentWillUnmount;
+	  component.componentWillUnmount.__original = componentWillUnmount;
+	};
+	SegmentHelper.prototype.unlistenUnmount = function unlistenUnmount (component) {
+	  var componentWillUnmount = component.componentWillUnmount;
+	  if (!componentWillUnmount) { return }
+	  var original = component.componentWillUnmount.__original;
+	  if (!original) { return }
+	  component.componentWillUnmount = original;
+	};
+	SegmentHelper.prototype.updateData = function updateData () {
+	    var this$1 = this;
+
+	  var data = {};
+	  var paths = this.paths;
+
+	  if (typeof paths === "string") {
+	      paths = split(paths, this.keySeperator);
+	      data = this.store.get(paths);
+	  } else if (Array.isArray(paths)) {
+	      data = paths.map(function (path) {
+	          var key = split(path, this$1.keySeperator);
+	          return this$1.store.get(key)
+	      });
+	  } else {
+	      for (var key in paths) {
+	          var path = split(paths[key], this.keySeperator);
+	          data[key] = this.store.get(path);
+	      }
 	  }
-	};
-	Segment.prototype.updateData = function updateData () {
-	  var segment = {};
-	  var paths = this.config.paths;
-	  for (var key in paths) {
-	    segment[key] = this.store.get(paths[key]);
+
+	  if (typeof data === "object") {
+	      data = freezeObject(umd({}, data));
 	  }
-	  this._data = freezeObject(umd({}, segment));
+
+	  this.data = data;
 	};
-	prototypeAccessors.data.get = function () {
-	  if (!this._data) {
-	    this.updateData();
-	  }
-	  return this._data
+	SegmentHelper.prototype.updateComponents = function updateComponents () {
+	    var this$1 = this;
+
+	  this.updateData();
+	  this.components.forEach(function (component) {
+	    this$1.assignState(component);
+	  });
+	  this.executeAfterUpdate();
 	};
-	Segment.prototype.dataUpdated = function dataUpdated () {
-	  this.assignState();
-	};
-	Segment.prototype.assignStateStatelessComponent = function assignStateStatelessComponent () {
+	SegmentHelper.prototype.assignStateFC = function assignStateFC (component, initialAssignment) {
 	    var assign;
 
-	  var to = this.config.to;
 	  var _, setState;
-	  if (Array.isArray(to)) {
-	    (assign = to, _ = assign[0], setState = assign[1]);
+	  if (Array.isArray(component)) {
+	    (assign = component, _ = assign[0], setState = assign[1]);
 	  }
 	  if (!setState) { return }
+	  if (initialAssignment) { return true }
 	  setState(this.data);
-	  to[0] = this.data;
+	  component[0] = this.data;
 	  return true
 	};
-	Segment.prototype.assignStateClassComponent = function assignStateClassComponent () {
-	  var target = this.config.to;
-	  if (typeof target.setState === 'function') {
-	    if (initialAssignment) {
-	      target.state = target.state || {};
-	      target.state.store = data;
-	    } else {
-	      target.setState({
-	        store: data
-	      });
-	    }
-	    return true
+	SegmentHelper.prototype.assignStateCC = function assignStateCC (component, initialAssignment) {
+	  if (typeof component.setState !== 'function') { return }
+	  if (initialAssignment) {
+	    component.state = component.state || {};
+	    component.state.store = this.data;
+	  } else {
+	    component.setState({
+	      store: this.data
+	    });
+	  }
+	  return true
+	};
+	SegmentHelper.prototype.assignStateOthers = function assignStateOthers (component) {
+	  if (typeof component === "object") {
+	    component.data = this.data;
 	  }
 	};
-	Segment.prototype.assignStateOthers = function assignStateOthers () {
-	  var target = this.config.to;
-	  if (typeof target === "object") {
-	    target.data = data;
-	  }
-	};
-	Segment.prototype.assignState = function assignState (initialAssignment) {
-	  this.updateData();
-	  var updatedSC = this.assignStateStatelessComponent();
-	  var updatedCC = this.assignStateClassComponent();
+	SegmentHelper.prototype.assignState = function assignState (component, initial) {
+	    if ( initial === void 0 ) initial = false;
+
+	  var updatedSC = this.assignStateFC(component, initial);
+	  var updatedCC = this.assignStateCC(component, initial);
 	  if (!updatedSC && !updatedCC) {
-	    this.assignStateOthers();
+	    this.assignStateOthers(component, initial);
 	  }
-	  var events = this.config;
-	  if (events && typeof events.afterUpdate === 'function') {
-	    events.afterUpdate(this.data);
+	};
+	SegmentHelper.prototype.executeAfterUpdate = function executeAfterUpdate () {
+	    var this$1 = this;
+
+	  this.afterUpdateEvents.forEach(function (func) {
+	    try {
+	      func(this$1.data);
+	    } catch (ex) {
+	      console.log(ex);
+	    }
+	  });
+	};
+	SegmentHelper.prototype.addMark = function addMark (component, mark) {
+	  var comp = component;
+	  if (Array.isArray(component)) {
+	    comp = component[1];
 	  }
-	  return this.data
+	  comp.__segment = mark;
 	};
-	Segment.prototype.bootstrap = function bootstrap () {
-	  this.normalizePaths();
-	  this.detachListeners = this.attachListeners();
-	  this.destroy = this._destroy.bind(this);
-	};
-	Segment.prototype._destroy = function _destroy () {
-	  this.detachListeners();
-	  this.store.destroySegment(this);
-	  delete this._data;
-	  delete this.store;
-	  delete this.config;
-	  delete this.dataObserver;
-	  this.active = false;
+	SegmentHelper.prototype.removeMark = function removeMark (component) {
+	  var comp = component;
+	  if (Array.isArray(component)) {
+	    comp = component[1];
+	  }
+	  delete comp.__segment;
 	};
 
-	Object.defineProperties( Segment.prototype, prototypeAccessors );
+	Object.defineProperties( SegmentHelper.prototype, prototypeAccessors );
+
+	var Segment = function Segment (paths, id, keySeperator, store, dataObserver) {
+	    
+	  this.id = id || index_browser();
+	  this.paths = paths;
+
+	  this._helper = new SegmentHelper(paths, keySeperator, store, dataObserver);
+	    
+	  this.keySeperator = keySeperator;
+	  this.store = store;
+	  this.dataObserver = dataObserver;
+	  this.dataTransformers = [];
+	};
+
+	var prototypeAccessors$1 = { data: { configurable: true },components: { configurable: true },afterUpdateEvents: { configurable: true } };
+
+	Segment.prototype.dataTransformer = function dataTransformer (func) {
+	  if (typeof func === "function") { this.dataTransformers.push(func); }
+	};
+
+	Segment.prototype.findComponent = function findComponent (search) {
+	  if (Array.isArray(search)) {
+	    search = search[1];
+	  }
+	  var components = this._helper.components;
+	  for (var i = 0; i < components.length; i++) {
+	    var component = components[i];
+	    if (Array.isArray(component)) {
+	      component = component[1];
+	    }
+	    if (search === component) {
+	      return i
+	    }
+	  }
+	  return -1
+	};
+
+	Segment.prototype.linkComponent = function linkComponent (component) {
+	  if (!component) { return }
+	  var helper = this._helper;
+	  var unlinkComponent = this.unlinkComponent.bind(this, component);
+	  var retObject = {
+	    data: this.data,
+	    unlinkComponent: unlinkComponent
+	  };
+	  if (this.findComponent(component) > -1) { return retObject }
+	  helper.components.push(component);
+	  helper.observe();
+	  helper.addMark(component, this);
+	  helper.listenUnmount(component, unlinkComponent);
+	  helper.assignState(component, true);
+	  return retObject
+	};
+
+	prototypeAccessors$1.data.get = function () {
+	  var helper = this._helper;
+	  if (!helper.data) {
+	    helper.updateData();
+	  }
+	  return helper.data
+	};
+
+	prototypeAccessors$1.components.get = function () {
+	  return this._helper.components.slice(0)
+	};
+
+	prototypeAccessors$1.afterUpdateEvents.get = function () {
+	  return this._helper.afterUpdateEvents.slice(0)
+	};
+
+	Segment.prototype.unlinkComponent = function unlinkComponent (component) {
+	  if (!component) { return }
+	  var helper = this._helper;
+	  var idx = this.findComponent(component);
+	  if (idx > -1) {
+	    helper.removeMark(component);
+	    helper.components.splice(idx, 1);
+	    helper.unlistenUnmount(component);
+	  }
+	  if (helper.components.length === 0) {
+	    helper.unobserve();
+	  }
+	};
+
+	Segment.prototype.onUpdate = function onUpdate (func) {
+	  if (typeof func === "function") {
+	    this._helper.afterUpdateEvents.push(func);
+	  }
+	};
+
+	Segment.prototype.teardown = function teardown () {
+	  delete this._helper;
+	  delete this.dataObserver;
+	};
+
+	Object.defineProperties( Segment.prototype, prototypeAccessors$1 );
 
 	var DataObserver = function DataObserver (store) {
 	  this.store = store;
@@ -1066,7 +1211,7 @@
 	    }
 	  });
 	};
-	DataObserver.prototype.destroy = function destroy () {
+	DataObserver.prototype.teardown = function teardown () {
 	  this.listeners = {};
 	};
 
@@ -1157,26 +1302,35 @@
 	Clearx.prototype.toggle = function toggle$1 (key) {
 	  return this.executeUtil(key, toggle(this.data, key))
 	};
+	Clearx.prototype.paths = function paths (keys, id, keySeperator) {
+	  var segment = new Segment(keys, id, keySeperator || this.keySeperator, this, this.dataObserver);
+	  this.segments.push(segment);
+	  return segment
+	};
 	Clearx.prototype.bind = function bind (options) {
+	    if ( options === void 0 ) options = {};
+
 	  var to = options.to;
-	  var component, segment;
+	    var afterUpdate = options.afterUpdate;
+	    var id = options.id;
+	    var keySeperator = options.keySeperator;
+	    var paths = options.paths;
+	  var component = to;
+	  if (Array.isArray(component)) {
+	    component = to[1];
+	  }
+	  var segment;
+	  segment = component.__segment;
+	  if (segment) {
+	    return segment.linkComponent(to)
+	  }
+	  segment = this.paths(paths, id, keySeperator);
+	  segment.onUpdate(afterUpdate);
+	  var link = segment.linkComponent(to);
 
 	  if (Array.isArray(to)) {
-	    component = to[1];
-	    segment = component.__store;
+	    return link
 	  }
-
-	  if (segment) { return segment }
-	    
-	  segment = new Segment(Object.assign({}, {keySeperator: this.keySeperator},
-	    options), this, this.dataObserver);
-
-	  Object.defineProperty(component, '__store', {
-	    value: segment,
-	    writable: false
-	  });
-
-	  this.segments.push(segment);
 	  return segment
 	};
 	Clearx.prototype.destroySegment = function destroySegment (segment) {
@@ -1185,47 +1339,50 @@
 	};
 	Clearx.prototype.destroy = function destroy () {
 	  this.segments.forEach(function (segment) {
-	    segment.destroy();
+	    segment.teardown();
 	  });
-	  this.dataObserver.destroy();
+	  this.dataObserver.teardown();
 	  this.data = {};
 	};
 
-	var data$1 = {
+	var data = {
 	  title: 'Todo App',
 	  todos: [],
 	  count: 0
 	};
 
-	var store = new Clearx(data$1);
+	var store = new Clearx(data);
 
 	var useState = react.useState;
 	var useEffect = react.useEffect;
 	var render = reactDom.render;
 	var unmountComponentAtNode = reactDom.unmountComponentAtNode;
 
+	var todoStore = store.paths("todos");
+
 	var TodoApp = function () {
 	  
-	  var ref = store.bind({
-	    paths: {
-	      todos: 'todos',
-	      count: 'count'
-	    },
-	    to: useState()
-	  });
+	  var ref = todoStore.linkComponent(useState());
 	  var data = ref.data;
-	  var destroy = ref.destroy;
+	  var unlinkComponent = ref.unlinkComponent;
 
-	  useEffect(function () { return destroy; }, []);
+	  useEffect(function () { return unlinkComponent; }, []);
 
-	  console.log(data);
-	  console.log(store);
+	  // console.log(data)
+	  // console.log(store)
 
 	  return (
 	    react.createElement( 'div', { class: "container" },
-	      data.count,
-	      react.createElement( 'br', null ),
-	      data.todos.join(', ')
+	      react.createElement( 'div', { class: "header" },  
+	        react.createElement( 'h3', { class: "header-title" }, "Todos"),
+	        react.createElement( 'button', { class: "add-todo" }, "Add Todo")
+	      ),
+	      react.createElement( 'div', { class: "content" },
+	        data.length
+	      ),
+	      react.createElement( 'div', { class: "content" },
+	        data.join(', ')
+	      )
 	    )
 	  )
 	};
@@ -1241,6 +1398,8 @@
 
 	setTimeout(function () {
 	  unmountComponentAtNode(document.body);
+	  store.destroySegment(todoStore);
+	  console.log(store);
 	}, 15000);
 
 	render(react.createElement( TodoApp, null ), document.body);

@@ -4,29 +4,31 @@ const { useState, useEffect } = React
 const { render, unmountComponentAtNode } = reactDOM
 import './app.css'
 
-
 import store from './store'
+
+const todoStore = store.paths("todos")
 
 const TodoApp = () => {
   
-  const { data, destroy } = store.bind({
-    paths: {
-      todos: 'todos',
-      count: 'count'
-    },
-    to: useState()
-  })
+  const { data, unlinkComponent} = todoStore.linkComponent(useState())
 
-  useEffect(() => destroy, [])
+  useEffect(() => unlinkComponent, [])
 
-  console.log(data)
-  console.log(store)
+  // console.log(data)
+  // console.log(store)
 
   return (
     <div class="container">
-      { data.count }
-      <br />
-      { data.todos.join(', ') }
+      <div class="header"> 
+        <h3 class="header-title">Todos</h3>
+        <button class="add-todo">Add Todo</button>
+      </div>
+      <div class="content">
+        {data.length}
+      </div>
+      <div class="content">
+        {data.join(', ')}
+      </div>
     </div>
   )
 }
@@ -42,6 +44,8 @@ setInterval(() => {
 
 setTimeout(() => {
   unmountComponentAtNode(document.body)
+  store.destroySegment(todoStore)
+  console.log(store)
 }, 15000)
 
 render(<TodoApp />, document.body)

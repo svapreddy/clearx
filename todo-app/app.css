@@ -1,11 +1,42 @@
 body, html {
     height: 100%;
     width: 100%;
-    margin: 0
+    margin: 0;
+    font-family: sans-serif;
 }
 
 .container {
     height: 100%;
     width: 100%;
-    background: #f2f2f2
+    background: #f2f2f2;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    height: 50px;
+    background-color: dodgerblue;
+    color: white;
+    padding: 5px 10px;
+    display: flex
+}
+
+.content {
+    padding: 10px;
+    flex-grow: 1
+}
+
+.header-title {
+    flex-grow: 1;
+    font-weight: 600;
+
+}
+
+.add-todo {
+    padding: 0 25px;
+    border: none;
+    font-size: 16px;
+    border-radius: 5px;
+    color: #333333;
 }

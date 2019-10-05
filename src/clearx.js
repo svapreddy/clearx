@@ -70,28 +70,29 @@ class Clearx {
   toggle (key) {
     return this.executeUtil(key, toggle(this.data, key))
   }
-  bind (options) {
-    const { to } = options
-    let component, segment
+  paths (keys, id, keySeperator) {
+    const segment = new Segment(keys, id, keySeperator || this.keySeperator, this, this.dataObserver)
+    this.segments.push(segment)
+    return segment
+  }
+  bind (options = {}) {
+    const { to, afterUpdate, id, keySeperator, paths } = options
+    let component = to
+    if (Array.isArray(component)) {
+      component = to[1]
+    }
+    let segment
+    segment = component.__segment
+    if (segment) {
+      return segment.linkComponent(to)
+    }
+    segment = this.paths(paths, id, keySeperator)
+    segment.onUpdate(afterUpdate)
+    const link = segment.linkComponent(to)
 
     if (Array.isArray(to)) {
-      component = to[1]
-      segment = component.__store
+      return link
     }
-
-    if (segment) return segment
-    
-    segment = new Segment({
-      keySeperator: this.keySeperator,
-      ...options
-    }, this, this.dataObserver)
-
-    Object.defineProperty(component, '__store', {
-      value: segment,
-      writable: false
-    })
-
-    this.segments.push(segment)
     return segment
   }
   destroySegment (segment) {
@@ -100,9 +101,9 @@ class Clearx {
   }
   destroy () {
     this.segments.forEach((segment) => {
-      segment.destroy()
+      segment.teardown()
     })
-    this.dataObserver.destroy()
+    this.dataObserver.teardown()
     this.data = {}
   }
 }

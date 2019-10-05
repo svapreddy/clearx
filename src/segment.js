@@ -1,131 +1,97 @@
-import { split, freezeObject } from './object-utils'
-import deepmerge from 'deepmerge'
+import nanoid from 'nanoid'
+import SegmentHelper from './segment-helper'
 
 class Segment {
-  constructor (config, store, dataObserver) {
-    this.config = config
+  constructor (paths, id, keySeperator, store, dataObserver) {
+    
+    this.id = id || nanoid()
+    this.paths = paths
+
+    this._helper = new SegmentHelper(paths, keySeperator, store, dataObserver)
+    
+    this.keySeperator = keySeperator
     this.store = store
     this.dataObserver = dataObserver
-    this.detachListeners = () => {}
-    this.keySeperator = '.'
-    this.listeningKeys = {}
-    this.bootstrap()
-    this.active = true
+    this.dataTransformers = []
   }
-  attachListeners () {
-    const dataChanges = this.listenDataChanges()
-    const onUnmount = this.listenUnmount()
-    return () => {
-      dataChanges()
-      onUnmount()
+
+  dataTransformer (func) {
+    if (typeof func === "function") this.dataTransformers.push(func)
+  }
+
+  findComponent (search) {
+    if (Array.isArray(search)) {
+      search = search[1]
     }
-  }
-  normalizePaths () {
-    let listeningKeys = {}
-    let paths = this.config.paths
-    for (const key in paths) {
-      if (paths.hasOwnProperty(key)) {
-        listeningKeys[key] = split(paths[key], this.keySeperator)
+    const components = this._helper.components
+    for (let i = 0; i < components.length; i++) {
+      let component = components[i]
+      if (Array.isArray(component)) {
+        component = component[1]
+      }
+      if (search === component) {
+        return i
       }
     }
-    this.listeningKeys = listeningKeys
+    return -1
   }
-  listenDataChanges () {
-    let listeningKeys = Object.values(this.listeningKeys)
-    const cacelObserver = this.dataObserver.attachObserver(listeningKeys, this.dataUpdated.bind(this))
-    return () => {
-      cacelObserver()
+
+  linkComponent (component) {
+    if (!component) return
+    const helper = this._helper
+    const unlinkComponent = this.unlinkComponent.bind(this, component)
+    const retObject = {
+      data: this.data,
+      unlinkComponent
     }
+    if (this.findComponent(component) > -1) return retObject
+    helper.components.push(component)
+    helper.observe()
+    helper.addMark(component, this)
+    helper.listenUnmount(component, unlinkComponent)
+    helper.assignState(component, true)
+    return retObject
   }
-  listenUnmount () {
-    const target = this.config.to
-    if (Array.isArray(target)) return () => {}
-    this.componentWillUnmount = target.componentWillUnmount
-    target.componentWillUnmount = () => {
-      this.destroy()
-      if (typeof this.componentWillUnmount === 'function') {
-        this.componentWillUnmount.call(target)
-      }
-    }
-    return () => {
-      target.componentWillUnmount = this.componentWillUnmount
-      delete this.componentWillUnmount
-    }
-  }
-  updateData () {
-    let segment = {}
-    const paths = this.config.paths
-    for (const key in paths) {
-      segment[key] = this.store.get(paths[key])
-    }
-    this._data = freezeObject(deepmerge({}, segment))
-  }
+
   get data () {
-    if (!this._data) {
-      this.updateData()
+    const helper = this._helper
+    if (!helper.data) {
+      helper.updateData()
     }
-    return this._data
+    return helper.data
   }
-  dataUpdated () {
-    this.assignState()
+
+  get components () {
+    return this._helper.components.slice(0)
   }
-  assignStateStatelessComponent () {
-    const to = this.config.to
-    let _, setState
-    if (Array.isArray(to)) {
-      [_, setState] = to
+
+  get afterUpdateEvents () {
+    return this._helper.afterUpdateEvents.slice(0)
+  }
+
+  unlinkComponent (component) {
+    if (!component) return
+    const helper = this._helper
+    const idx = this.findComponent(component)
+    if (idx > -1) {
+      helper.removeMark(component)
+      helper.components.splice(idx, 1)
+      helper.unlistenUnmount(component)
     }
-    if (!setState) return
-    setState(this.data)
-    to[0] = this.data
-    return true
-  }
-  assignStateClassComponent () {
-    let target = this.config.to
-    if (typeof target.setState === 'function') {
-      if (initialAssignment) {
-        target.state = target.state || {}
-        target.state.store = data
-      } else {
-        target.setState({
-          store: data
-        })
-      }
-      return true
+    if (helper.components.length === 0) {
+      helper.unobserve()
     }
   }
-  assignStateOthers () {
-    const target = this.config.to
-    if (typeof target === "object") {
-      target.data = data
+
+  onUpdate (func) {
+    if (typeof func === "function") {
+      this._helper.afterUpdateEvents.push(func)
     }
   }
-  assignState (initialAssignment) {
-    this.updateData()
-    const updatedSC = this.assignStateStatelessComponent()
-    const updatedCC = this.assignStateClassComponent()
-    if (!updatedSC && !updatedCC) {
-      this.assignStateOthers()
-    }
-    const events = this.config
-    if (events && typeof events.afterUpdate === 'function') {
-      events.afterUpdate(this.data)
-    }
-    return this.data
-  }
-  bootstrap () {
-    this.normalizePaths()
-    this.detachListeners = this.attachListeners()
-    this.destroy = this._destroy.bind(this)
-  }
-  _destroy () {
-    this.detachListeners()
-    this.store.destroySegment(this)
-    delete this._data
-    delete this.store
-    delete this.config
+
+  teardown () {
+    delete this._helper
     delete this.dataObserver
-    this.active = false
   }
 }
 

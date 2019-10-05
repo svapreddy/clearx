@@ -38,7 +38,7 @@ class DataObserver {
       }
     })
   }
-  destroy () {
+  teardown () {
     this.listeners = {}
   }
 }
