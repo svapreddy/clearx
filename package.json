@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "browser": "dist/clearx.js",
   "scripts": {
-    "test": "jest --runInBand",
+    "test": "jest --runInBand --coverage",
     "build": "./node_modules/.bin/rollup -c",
     "lint:fix": "./node_modules/.bin/standard ./src --fix",
     "todo": "./node_modules/.bin/rollup -c todo-app/rollup.todo-app.config.js -w"

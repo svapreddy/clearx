@@ -956,8 +956,8 @@
 	  return keys
 	};
 
-	SegmentHelper.prototype.observe = function observe () {
-	  if (this.components.length === 0) { return }
+	SegmentHelper.prototype.observe = function observe (force) {
+	  if (this.components.length === 0 && !force) { return }
 	  if (this.cancelObserver) { return }
 
 	  var observer = this.dataObserver;
@@ -1210,7 +1210,7 @@
 	  };
 	  if (this.findComponent(component) > -1) { return retObject }
 	  helper.components.push(component);
-	  helper.observe();
+	  helper.observe(this.keepSyncing);
 	  helper.addMark(component, this);
 	  helper.listenUnmount(component, unlink);
 	  helper.assignState(component, true);
@@ -1227,8 +1227,20 @@
 	    helper.components.splice(idx, 1);
 	    helper.unlistenUnmount(component);
 	  }
-	  if (helper.components.length === 0) {
+	  if ((helper.components.length === 0) && !this.keepSyncing) {
 	    helper.unobserve();
+	  }
+	};
+
+	Segment.prototype.sync = function sync (on) {
+	    if ( on === void 0 ) on = true;
+
+	  this.keepSyncing = on;
+	  if (on && !this.active) {
+	    this._helper.observe(true);
+	  }
+	  if (!on && this.active) {
+	    this._helper.unobserve();
 	  }
 	};
 

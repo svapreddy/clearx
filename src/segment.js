@@ -62,7 +62,7 @@ class Segment {
     }
     if (this.findComponent(component) > -1) return retObject
     helper.components.push(component)
-    helper.observe()
+    helper.observe(this.keepSyncing)
     helper.addMark(component, this)
     helper.listenUnmount(component, unlink)
     helper.assignState(component, true)
@@ -79,8 +79,18 @@ class Segment {
       helper.components.splice(idx, 1)
       helper.unlistenUnmount(component)
     }
-    if (helper.components.length === 0) {
+    if ((helper.components.length === 0) && !this.keepSyncing) {
       helper.unobserve()
+    }
+  }
+
+  sync (on = true) {
+    this.keepSyncing = on
+    if (on && !this.active) {
+      this._helper.observe(true)
+    }
+    if (!on && this.active) {
+      this._helper.unobserve()
     }
   }
 

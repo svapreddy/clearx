@@ -29,8 +29,8 @@ class SegmentHelper {
     return keys
   }
 
-  observe () {
-    if (this.components.length === 0) return
+  observe (force) {
+    if (this.components.length === 0 && !force) return
     if (this.cancelObserver) return
 
     const observer = this.dataObserver
