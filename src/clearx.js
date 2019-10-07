@@ -3,11 +3,11 @@ import DataObserver from './data-observer'
 import { sort, get, set, coalesce, empty, insert, push, pop, shift, splice, unshift, ensureExists, del, has, merge, increment, decrement, toggle, isEqual, slice } from './object-utils'
 
 class Clearx {
-  constructor (data, { keySeperator = '.' } = {}) {
+  constructor (data, { delimiter = '.' } = {}) {
     this.data = data
     this.segments = []
     this.dataObserver = new DataObserver(this)
-    this.keySeperator = keySeperator
+    this.delimiter = delimiter
     this.onUpdateEvents = []
   }
 
@@ -103,14 +103,14 @@ class Clearx {
     return isEqual(this.data, key, value)
   }
 
-  paths (keys, id, keySeperator) {
-    const segment = new Segment(keys, id, keySeperator || this.keySeperator, this, this.dataObserver)
+  paths (keys, id, delimiter) {
+    const segment = new Segment(keys, id, delimiter || this.delimiter, this, this.dataObserver)
     this.segments.push(segment)
     return segment
   }
 
   bind (options = {}) {
-    const { to, afterUpdate, id, keySeperator, paths } = options
+    const { to, afterUpdate, id, delimiter, paths } = options
     let component = to
     if (Array.isArray(component)) {
       component = to[1]
@@ -120,7 +120,7 @@ class Clearx {
     if (segment) {
       return segment.link(to)
     }
-    segment = this.paths(paths, id, keySeperator)
+    segment = this.paths(paths, id, delimiter)
     segment.onUpdate(afterUpdate)
     const link = segment.link(to)
 

@@ -3,6 +3,7 @@ import reactDOM from 'react-dom'
 import './app.css'
 
 import store from './store'
+import Clearx from '../src/clearx'
 
 const { useState, useEffect } = React
 const { render, unmountComponentAtNode } = reactDOM

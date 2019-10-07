@@ -21,7 +21,7 @@ export interface segmentOptions {
     paths: paths
     events?: events
     withDefaultData?: withDefaultData,
-    keySeperator: string
+    delimiter: string
 }
 
 export enum arrayMethods {
@@ -65,5 +65,5 @@ export interface DataObserverIF {
 }
 
 export interface clearxOptions {
-    keySeperator?: string
+    delimiter?: string
 }

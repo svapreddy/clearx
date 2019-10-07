@@ -2,13 +2,13 @@ import nanoid from 'nanoid'
 import SegmentHelper from './segment-helper'
 
 class Segment {
-  constructor (paths, id, keySeperator, store, dataObserver) {
+  constructor (paths, id, delimiter, store, dataObserver) {
     this.id = id || nanoid()
     this.paths = paths
 
-    this._helper = new SegmentHelper(paths, keySeperator, store, dataObserver)
+    this._helper = new SegmentHelper(paths, delimiter, store, dataObserver)
 
-    this.keySeperator = keySeperator
+    this.delimiter = delimiter
     this.store = store
     this.dataObserver = dataObserver
   }

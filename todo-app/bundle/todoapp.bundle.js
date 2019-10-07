@@ -925,11 +925,11 @@
 	  return fastDeepEqual(current, data)
 	};
 
-	var SegmentHelper = function SegmentHelper (paths, keySeperator, store, dataObserver) {
-	  if ( keySeperator === void 0 ) keySeperator = '.';
+	var SegmentHelper = function SegmentHelper (paths, delimiter, store, dataObserver) {
+	  if ( delimiter === void 0 ) delimiter = '.';
 
 	  this.paths = paths;
-	  this.keySeperator = keySeperator;
+	  this.delimiter = delimiter;
 	  this.store = store;
 	  this.dataObserver = dataObserver;
 	  this.components = [];
@@ -944,11 +944,11 @@
 	  if (Array.isArray(paths)) { return paths }
 	  var keys = [];
 	  if (typeof paths === 'string') {
-	    keys = [split(paths, this.keySeperator)];
+	    keys = [split(paths, this.delimiter)];
 	  } else if (paths.toString() === '[object Object]') {
 	    for (var key in paths) {
 	      if (!paths.hasOwnProperty(key)) { continue }
-	      keys.push(split(paths[key], this.keySeperator));
+	      keys.push(split(paths[key], this.delimiter));
 	    }
 	  } else {
 	    return paths
@@ -1023,16 +1023,16 @@
 	  var paths = this.paths;
 
 	  if (typeof paths === 'string') {
-	    paths = split(paths, this.keySeperator);
+	    paths = split(paths, this.delimiter);
 	    data = this.store.get(paths);
 	  } else if (Array.isArray(paths)) {
 	    data = paths.map(function (path) {
-	      var key = split(path, this$1.keySeperator);
+	      var key = split(path, this$1.delimiter);
 	      return this$1.store.get(key)
 	    });
 	  } else {
 	    for (var key in paths) {
-	      var path = split(paths[key], this.keySeperator);
+	      var path = split(paths[key], this.delimiter);
 	      data[key] = this.store.get(path);
 	    }
 	  }
@@ -1148,13 +1148,13 @@
 
 	Object.defineProperties( SegmentHelper.prototype, prototypeAccessors );
 
-	var Segment = function Segment (paths, id, keySeperator, store, dataObserver) {
+	var Segment = function Segment (paths, id, delimiter, store, dataObserver) {
 	  this.id = id || index_browser();
 	  this.paths = paths;
 
-	  this._helper = new SegmentHelper(paths, keySeperator, store, dataObserver);
+	  this._helper = new SegmentHelper(paths, delimiter, store, dataObserver);
 
-	  this.keySeperator = keySeperator;
+	  this.delimiter = delimiter;
 	  this.store = store;
 	  this.dataObserver = dataObserver;
 	};
@@ -1332,12 +1332,12 @@
 
 	var Clearx = function Clearx (data, ref) {
 	  if ( ref === void 0 ) ref = {};
-	  var keySeperator = ref.keySeperator; if ( keySeperator === void 0 ) keySeperator = '.';
+	  var delimiter = ref.delimiter; if ( delimiter === void 0 ) delimiter = '.';
 
 	  this.data = data;
 	  this.segments = [];
 	  this.dataObserver = new DataObserver(this);
-	  this.keySeperator = keySeperator;
+	  this.delimiter = delimiter;
 	  this.onUpdateEvents = [];
 	};
 
@@ -1453,8 +1453,8 @@
 	  return isEqual(this.data, key, value)
 	};
 
-	Clearx.prototype.paths = function paths (keys, id, keySeperator) {
-	  var segment = new Segment(keys, id, keySeperator || this.keySeperator, this, this.dataObserver);
+	Clearx.prototype.paths = function paths (keys, id, delimiter) {
+	  var segment = new Segment(keys, id, delimiter || this.delimiter, this, this.dataObserver);
 	  this.segments.push(segment);
 	  return segment
 	};
@@ -1465,7 +1465,7 @@
 	  var to = options.to;
 	    var afterUpdate = options.afterUpdate;
 	    var id = options.id;
-	    var keySeperator = options.keySeperator;
+	    var delimiter = options.delimiter;
 	    var paths = options.paths;
 	  var component = to;
 	  if (Array.isArray(component)) {
@@ -1476,7 +1476,7 @@
 	  if (segment) {
 	    return segment.link(to)
 	  }
-	  segment = this.paths(paths, id, keySeperator);
+	  segment = this.paths(paths, id, delimiter);
 	  segment.onUpdate(afterUpdate);
 	  var link = segment.link(to);
 

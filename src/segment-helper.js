@@ -2,9 +2,9 @@ import { split, freezeObject } from './object-utils'
 import deepmerge from 'deepmerge'
 
 class SegmentHelper {
-  constructor (paths, keySeperator = '.', store, dataObserver) {
+  constructor (paths, delimiter = '.', store, dataObserver) {
     this.paths = paths
-    this.keySeperator = keySeperator
+    this.delimiter = delimiter
     this.store = store
     this.dataObserver = dataObserver
     this.components = []
@@ -17,11 +17,11 @@ class SegmentHelper {
     if (Array.isArray(paths)) return paths
     let keys = []
     if (typeof paths === 'string') {
-      keys = [split(paths, this.keySeperator)]
+      keys = [split(paths, this.delimiter)]
     } else if (paths.toString() === '[object Object]') {
       for (const key in paths) {
         if (!paths.hasOwnProperty(key)) continue
-        keys.push(split(paths[key], this.keySeperator))
+        keys.push(split(paths[key], this.delimiter))
       }
     } else {
       return paths
@@ -92,16 +92,16 @@ class SegmentHelper {
     let paths = this.paths
 
     if (typeof paths === 'string') {
-      paths = split(paths, this.keySeperator)
+      paths = split(paths, this.delimiter)
       data = this.store.get(paths)
     } else if (Array.isArray(paths)) {
       data = paths.map((path) => {
-        const key = split(path, this.keySeperator)
+        const key = split(path, this.delimiter)
         return this.store.get(key)
       })
     } else {
       for (const key in paths) {
-        const path = split(paths[key], this.keySeperator)
+        const path = split(paths[key], this.delimiter)
         data[key] = this.store.get(path)
       }
     }

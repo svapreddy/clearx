@@ -1,9 +1,11 @@
 <h1 align="center">ClearX</h1>
-<div align="center"> Simple global store for React. </div>
+<div align="center"> Simple global state management for React, Preact and Inferno. </div>
 <br />
 
 ## Table of Contents
 - [Introduction](#introduction)
+- [How ClearX works](#how-clearx-works)
+- [Philosophy](#philosophy)
 - [Usage](#usage)
 - [Todo example & Comparison](#example-todo-implementation-using-react-and-clearx)
 - [API](#api)
@@ -11,15 +13,44 @@
  
 #### Introduction: 
 
-`ClearX` provides an alternative way to manage the global store for the React application.
+`ClearX` provides an alternative & very simple way to manage the global state for the Frontend application. Check this [link](https://codesandbox.io/embed/v6ln04730?fontsize=14) for a basic Todo App demo or check out Todo example section
 
-Advantages:
+###### Advantages:
 
-- Cleax is fast and small. Usage is very simple.
-- Automatically triggers the UI Component's re-render process only when depending data change.
-- Provides rich set of API to operate on data.
-- Properties can be accessed before they are created.
-- Works with Class components, Functional Components and plain objects.
+- Insanely simple to use. Fast & small (3kb)
+- Re-renders UI components only when dependent data is changed in Store
+- The store can be accessed, changed from anywhere in an application using an expressive API
+- The store is a plain reactive JS Object.
+- No limitations for adding new properties to the existing store after creation
+- Local state and global store can be used together. No restrictions. No limit on the number of stores. Store data is reversible & cloneable
+- Makes it easy to work with 3rd party libraries that have no react flavour in them
+- Helps to write tree-shaking friendly codebase.
+- Compatible with React, Preact, and Inferno without any configurational changes.
+
+It's this simple:
+
+```javascript
+Store.bind({
+  paths: {
+    fileOne: ['file', 'one']
+  },
+  to: this
+})
+```
+
+Note: Earlier versions used `slice` method. It will work without any problem. But the bind method is recommended. For usage of slice method please check tests.
+
+###### How `ClearX` works:
+
+The initial step in ClearX is creating an application data structure and creating a ClearX data store instance. Data attached to this instance can be accessed & modified from anywhere in the application including UI components that share React UI component structure.
+
+ClearX provides a way to slice parts of data from the store and use it. This slice can be plugged to UI components. The slice keeps itself in sync with the latest data from the data store. When data is changed, the slice will trigger the UI component's re-render process and calls the afterUpdate callback.
+
+Data store provides an expressive API to modify the data in the store.
+
+###### Philosophy:
+
+UI represents complex business-related operations of an application using a visual layer. UI layer often goes through a lot of iterations and sometimes requires to refactor in an Agile development environment. Global State Management is the spine part of an application & deserve to be simple for the long run. If we keep it simple to understand for Developers, it helps to maintain the application performance and quality of the application.
 
 #### Usage:
 
@@ -32,94 +63,35 @@ npm install clearx --save
 ##### Creating a Store:
 
 ```javascript
-
-/* -------- Create store -------- */
-
-// step 1: import the clearx library
 import ClearX from `clearx`
-// step 2: create store with the default data
-let store = new Clearx({
-  name: 'Clearx Library',
-  age: 1,
-  tags: ['global-store', 'global-state', 'react'],
-  worksWith: {
-    react: true,
-    preact: true,
-    inferno: true
-  }
-})
-// step 3: export
-export default store
 
-/* -------- Create observable data segments -------- */
-
-// Note: properties can be non-existent. Segments are updated automatically when they are created.
-
-// A single path can be provided
-const name = store.paths('name')
-console.log(name.data) // Clearx Library
-
-const supportReact = store.paths('worksWith.react')
-console.log(supportReact.data) // true
-
-// Array of paths can be provided
-const basicInfo = store.paths(['name', 'age']) 
-console.log(basicInfo.data) // ['Clearx Library', 1]
-
-// Or a map of aliases and paths can be provided
-const info = store.paths({
-  inferno: 'worksWith.inferno',
-  age: 'age',
-  firstTag: 'tags.0'
-})
-console.log(info.data) // { age: 1, inferno: true, firstTag: 'global-store' }
-
-/* -------- Bind observable data segments to UI -------- */
-
-// Functional component
-
-const App = () => {
-  // a ui component can bound to multiple data segments
-  let { data, unlink } = info.link(useState())
-
-  useEffect(() => unlink, [])
-
-  return (
-    <>
-      <div>age: {data.age}</div>
-      <div>supports inferno: {data.inferno}</div>
-      <div>firstTag: {data.firstTag}</div>
-    </>
-  )
-}
-
-// Class component
-
-class App {
-  constructor (props) {
-    super(props)
-    info.link(this)
-    console.log(this.state.store) // { age: 1, inferno: true, firstTag: 'global-store' }
-  }
-  render () {
-    const { store } = this.state
-    return (
-      <>
-        <div>age: {store.age}</div>
-        <div>supports inferno: {store.inferno}</div>
-        <div>firstTag: {store.firstTag}</div>
-      </>
-    )
+// Application data structure.
+let ApplicationData = {
+  user: {
+    signedIn: false
+  },
+  test: 'one',
+  data: {
+    files: {
+      file1: {
+        name: 'my file1.txt'
+      }
+    }
+  },
+  a: {
+    b: "d",
+    c: ["e", "f"]
   }
 }
 
+// Create clearx instance with the data
+let appStore = new ClearX(ApplicationData)
+
+export default appStore
+
 ```
 
-##### Create re-usable data segments:
-
-```
-
-```
+##### Slicing and Attaching the data store to a UI Component
 
 ```javascript
 import React, { Component } from 'react'
