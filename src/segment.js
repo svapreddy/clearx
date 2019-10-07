@@ -60,18 +60,16 @@ class Segment {
     if (!component) return {}
     const helper = this._helper
     if (!helper) return {}
-    const unlink = this.unlink.bind(this, component)
-    const retObject = {
-      data: this.data,
-      unlink
-    }
-    if (this.findComponent(component) > -1) return retObject
+    const store = this.store
+    const unlink = store._unlinkComponentFromAllSegments.bind(store, component)
+    const result = [ this.data, unlink ]
+    if (this.findComponent(component) > -1) return result
     helper.components.push(component)
     helper.observe(this.keepSyncing)
     helper.addMark(component, this)
     helper.listenUnmount(component, unlink)
     helper.assignState(component, true)
-    return retObject
+    return result
   }
 
   unlink (component) {

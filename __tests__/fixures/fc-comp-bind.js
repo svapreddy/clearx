@@ -2,7 +2,7 @@ import React, { useEffect, useState, Fragment } from 'react'
 import store from './store'
 
 const Component = () => {
-    const { data, unlink } = store.bind({
+    const [ data, unlink ] = store.bind({
         paths: {
             numbers: 'nums',
             testArr: 'profile.testArr',

@@ -154,6 +154,12 @@ class Clearx {
     })
   }
 
+  _unlinkComponentFromAllSegments (component) {
+    this.segments.forEach((segment) => {
+      segment.unlink(component)
+    })
+  }
+
   teardown () {
     this.segments.forEach((segment) => {
       segment.teardown()

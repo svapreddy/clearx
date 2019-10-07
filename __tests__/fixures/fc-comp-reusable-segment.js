@@ -16,7 +16,7 @@ const randomData = store.paths({
 })
 
 const Component = () => {
-    const { data, unlink } = randomData.link(useState())
+    const [ data, unlink ] = randomData.link(useState())
 
     useEffect(() => unlink, [])
 

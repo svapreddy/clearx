@@ -137,8 +137,9 @@ class SegmentHelper {
     }
     if (!setState) return
     if (initialAssignment) return true
-    setState(this.data)
-    component[0] = this.data
+    component[0] = this._data
+    setState(this._data)
+    console.log(this._data)
     return true
   }
 

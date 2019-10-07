@@ -79,16 +79,19 @@ console.log(info.data) // { age: 1, inferno: true, firstTag: 'global-store' }
 // Functional component
 
 const App = () => {
+  
   // a ui component can bound to multiple data segments
-  let { data, unlink } = info.link(useState())
+  let [ information ] = info.link(useState())
+  let [ supportsReact, unlinkAll ] = supportReact.link(useState())
 
-  useEffect(() => unlink, [])
+  useEffect(() => unlinkAll, [])
 
   return (
     <>
-      <div>age: {data.age}</div>
-      <div>supports inferno: {data.inferno}</div>
-      <div>firstTag: {data.firstTag}</div>
+      <div>supports react: {supportsReact}></div>
+      <div>age: {information.age}</div>
+      <div>supports inferno: {information.inferno}</div>
+      <div>firstTag: {information.firstTag}</div>
     </>
   )
 }
@@ -113,99 +116,6 @@ class App {
   }
 }
 
-```
-
-##### Create re-usable data segments:
-
-```
-
-```
-
-```javascript
-import React, { Component } from 'react'
-
-// Import application store
-import appStore from './src/storeFile.js'
-
-// It can be a class or a function. ClearX works with all.
-class MyView extends Component {
-  constructor (props) {
-    super(props)
-    // UI Component can have a local state. Optional step!
-    this.state = {
-      localState1: 'test'
-    }
-    appStore.bind({
-      paths: {
-        // Non existent keys can be used. ClearX automatically updates components when data is available.
-        // Array format over 'data.files.file1' guards against unexpected . in keypath
-        fileOne: ['data', 'files', 'file1']
-      },
-      to: this,
-      // Optional. Sets the default data for above paths.
-      withDefaultData: {
-        fileOne: {
-          name: 'FileOne.txt'
-        }
-      },
-      // Optional events
-      events: {
-        // Called after data is updated.
-        afterUpdate: this.afterUpdate.bind(this)
-      },
-      // Optional. Automatically detected for React family UI components
-      isReactFamilyUIComponent: true
-    })
-    // Data bound is automatically destroyed.
-    // Expected: { localState1: 'test', store: { fileOne: <data from path> }}
-    console.log(this.state.store)
-  }
-  afterUpdate (data) {
-    console.log('State updated', data)
-  }
-  render () {
-    // Note: Always `this.state.store`
-    let { fileOne } = this.state.store
-    return (
-      <div>{fileOne.name}</div>
-    )
-  }
-}
-
-```
-
-##### Slicing and attaching the data store to a plain class
-
-```javascript
-
-import appStore from './src/storeFile.js'
-
-class Account {
-  constructor () {
-    this.sliced = appStore.bind({
-      paths: {
-        signedIn: ['user', 'signedIn']
-      },
-      to: this,
-      events: {
-        afterUpdate: this.checkData.bind(this)
-      }
-    })
-    // If not react component, the location for sliced data is `this.store`
-    console.log(this.store)
-  }
-  checkData () {
-    if (this.store.signedIn) {
-      // Fetch some initial data
-    }
-  }
-  destroy () {
-    // Need manual destroy for non UI components
-    this.sliced.destroy()
-  }
-}
-
-export default Account
 ```
 
 ##### Slicing and attaching the data store to a plain JavaScript Object
@@ -233,75 +143,6 @@ let checkData = () => {
 }
 
 ```
-
-##### Accessing & updating the application store without using slice.
-
-```javascript
-// Import appStore from file.
-import appStore from './src/storeFile.js'
-
-class MyCls {
-  constructor () {
-    this.updateData()
-  }
-  updateData () {
-    appStore.set(["a", "b"], "test")
-    this.checkData()
-  }
-  checkData () {
-    appStore.get(["a", "b"]) // Will be equal to "test"
-  }
-}
-
-export default MyCls
-```
-
-##### Data reversal example
-
-Data revert example:
-
-```javascript
-import appStore from './src/storeFile.js'
-
-class MyCls {
-  constructor () {
-    this.sliceInstance = appStore.bind({
-      paths: {
-        fileTwo_Name: ['data', 'files', 'file2', 'name']
-      },
-      to: this
-    })
-    this.postName()
-  }
-  checkData () {
-    let instance = this.sliceInstance
-    let old = instance.clone
-    instance.slice = {
-      fileTwo_Name: 'new name.txt'
-    }
-    makeSomeCall().then(() => {
-      // all good
-    }, () => {
-      // ClearX will internally check for changes and updates other slices if there are any changes.
-      instance.slice = old
-    })
-  }
-}
-
-export default MyCls
-```
-
-### Example Todo implementation using React and ClearX
-
-Please run:  
-
-```sh
-  $ npm install
-  $ npm install -g rollup
-  $ npm run todo 
-```
-
-Now go to http://localhost:8719/ to access todo application. The source is available under `./example` folder.
 
 ### API:
 

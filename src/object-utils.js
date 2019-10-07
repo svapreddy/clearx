@@ -3,7 +3,7 @@ import equal from 'fast-deep-equal'
 
 const toNumber = (val) => {
   if (!isNaN(val)) {
-    return parseInt(val, 10)
+    return val * 1
   }
   return val
 }
@@ -147,7 +147,7 @@ export const sort = (obj, keys, ...args) => {
 }
 
 export const increment = (obj, keys, by = 1) => {
-  let val = parseInt(get(obj, keys), 10)
+  let val = get(obj, keys) * 1
   if (isNaN(val)) {
     val = 0
   }

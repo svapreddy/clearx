@@ -36,12 +36,12 @@ describe('Function Component using bind', () => {
       })
 
       it('when same component is linked to same segment, it should not duplicate segment', () => {
-        let result
+        let data, unlink
         act(() => {
-          result = segment.link(component)
+          [data, unlink] = segment.link(component)
         })
         expect(store.segments.length).toBe(1)
-        expect(segment.data).toBe(result.data)
+        expect(segment.data).toBe(data)
       })
 
       it('segment has components array', () => {
@@ -66,12 +66,12 @@ describe('Function Component using bind', () => {
           segment.dataTransformer(fn)
           segment.link(component)
         })
-        const {data, unlink} = segment.link(component)
+        const [data, unlink] = segment.link(component)
         expect(data.test).toBe(200)
       })
 
       it('when unlinked, component should be removed from segment', () => {
-        const {data, unlink} = segment.link(component)
+        const [data, unlink] = segment.link(component)
         act(() => {
           unlink()
         })
@@ -79,7 +79,7 @@ describe('Function Component using bind', () => {
         expect(segment.findComponent(component)).toBe(-1)
       })
       it('if segment does not have any components, should not observe changes', () => {
-        const {data, unlink} = segment.link(component)
+        const [data, unlink] = segment.link(component)
         act(() => {
           unlink()
         })

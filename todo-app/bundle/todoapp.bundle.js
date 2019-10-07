@@ -660,7 +660,7 @@
 
 	var toNumber = function (val) {
 	  if (!isNaN(val)) {
-	    return parseInt(val, 10)
+	    return val * 1
 	  }
 	  return val
 	};
@@ -834,7 +834,7 @@
 	var increment = function (obj, keys, by) {
 	  if ( by === void 0 ) by = 1;
 
-	  var val = parseInt(get(obj, keys), 10);
+	  var val = get(obj, keys) * 1;
 	  if (isNaN(val)) {
 	    val = 0;
 	  }
@@ -1070,8 +1070,9 @@
 	  }
 	  if (!setState) { return }
 	  if (initialAssignment) { return true }
-	  setState(this.data);
-	  component[0] = this.data;
+	  component[0] = this._data;
+	  setState(this._data);
+	  console.log(this._data);
 	  return true
 	};
 
@@ -1208,18 +1209,16 @@
 	  if (!component) { return {} }
 	  var helper = this._helper;
 	  if (!helper) { return {} }
-	  var unlink = this.unlink.bind(this, component);
-	  var retObject = {
-	    data: this.data,
-	    unlink: unlink
-	  };
-	  if (this.findComponent(component) > -1) { return retObject }
+	  var store = this.store;
+	  var unlink = store._unlinkComponentFromAllSegments.bind(store, component);
+	  var result = [ this.data, unlink ];
+	  if (this.findComponent(component) > -1) { return result }
 	  helper.components.push(component);
 	  helper.observe(this.keepSyncing);
 	  helper.addMark(component, this);
 	  helper.listenUnmount(component, unlink);
 	  helper.assignState(component, true);
-	  return retObject
+	  return result
 	};
 
 	Segment.prototype.unlink = function unlink (component) {
@@ -1512,6 +1511,12 @@
 	  });
 	};
 
+	Clearx.prototype._unlinkComponentFromAllSegments = function _unlinkComponentFromAllSegments (component) {
+	  this.segments.forEach(function (segment) {
+	    segment.unlink(component);
+	  });
+	};
+
 	Clearx.prototype.teardown = function teardown () {
 	  this.segments.forEach(function (segment) {
 	    segment.teardown();
@@ -1536,17 +1541,21 @@
 	var unmountComponentAtNode = reactDom.unmountComponentAtNode;
 
 	var todoStore = store.paths(['todos', 'count']);
+	var countValue = store.paths('count');
 
 	var TodoApp = function () {
 
 	  var ref = todoStore.link(useState());
-	  var data = ref.data;
-	  var unlink = ref.unlink;
+	  var data = ref[0];
+	  var unlink = ref[1];
+	  var ref$1 = countValue.link(useState());
+	  var count = ref$1[0];
 
 	  useEffect(function () { return unlink; }, []);
 
-	  console.log(data);
-	  console.log(store);
+	  // console.log(data)
+	  // console.log(store)
+	  // console.log(Object.keys(window.stateFn[1]))
 
 	  return (
 	    react.createElement( 'div', { class: 'container' },
@@ -1555,17 +1564,17 @@
 	        react.createElement( 'button', { class: 'add-todo' }, "Add Todo")
 	      ),
 	      react.createElement( 'div', { class: 'content' },
-	        data.length
+	        data[0].length
 	      ),
 	      react.createElement( 'div', { class: 'content' },
-	        data[1]
+	        data[1] + ' : ' + count
 	      )
 	    )
 	  )
 	};
 
 	todoStore.onUpdate(function (data) {
-	  console.log('data updated', data);
+	  // console.log('data updated', data)
 	});
 
 	todoStore.dataTransformer(function (data) {
@@ -1582,13 +1591,14 @@
 
 	console.log(store.merge('test', {a: 1}));
 
-	setInterval(function () {
-	  unmountComponentAtNode(document.body);
-	}, 1000);
-
 	// setInterval(() => {
-	//   store.decrement('count', 45)
-	// }, 1500)
+	//   unmountComponentAtNode(document.body)
+	// }, 10000)
+
+	setInterval(function () {
+	  store.push('todos', Date.now());
+	  store.increment('count', 0.45);
+	}, 100);
 
 	// setTimeout(() => {
 	//   unmountComponentAtNode(document.body)

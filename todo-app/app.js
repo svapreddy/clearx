@@ -3,21 +3,23 @@ import reactDOM from 'react-dom'
 import './app.css'
 
 import store from './store'
-import Clearx from '../src/clearx'
 
 const { useState, useEffect } = React
 const { render, unmountComponentAtNode } = reactDOM
 
 const todoStore = store.paths(['todos', 'count'])
+const countValue = store.paths('count')
 
 const TodoApp = () => {
 
-  const { data, unlink } = todoStore.link(useState())
+  const [ data, unlink ] = todoStore.link(useState())
+  const [ count ] = countValue.link(useState())
 
   useEffect(() => unlink, [])
 
-  console.log(data)
-  console.log(store)
+  // console.log(data)
+  // console.log(store)
+  // console.log(Object.keys(window.stateFn[1]))
 
   return (
     <div class='container'>
@@ -26,17 +28,17 @@ const TodoApp = () => {
         <button class='add-todo'>Add Todo</button>
       </div>
       <div class='content'>
-        {data.length}
+        {data[0].length}
       </div>
       <div class='content'>
-        { data[1] }
+        { data[1] + ' : ' + count }
       </div>
     </div>
   )
 }
 
 todoStore.onUpdate((data) => {
-  console.log('data updated', data)
+  // console.log('data updated', data)
 })
 
 todoStore.dataTransformer((data) => {
@@ -53,13 +55,14 @@ store.ensureExists('profile.age', 30)
 
 console.log(store.merge('test', {a: 1}))
 
-setInterval(() => {
-  unmountComponentAtNode(document.body)
-}, 1000)
-
 // setInterval(() => {
-//   store.decrement('count', 45)
-// }, 1500)
+//   unmountComponentAtNode(document.body)
+// }, 10000)
+
+setInterval(() => {
+  store.push('todos', Date.now())
+  store.increment('count', 0.45)
+}, 100)
 
 // setTimeout(() => {
 //   unmountComponentAtNode(document.body)
