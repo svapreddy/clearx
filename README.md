@@ -1,5 +1,7 @@
+<span style="color:red">test</span>
 <h1 align="center">ClearX</h1>
 <div align="center"> Simple state management for React. </div>
+
 <br />
 
 `ClearX` provides an alternative way to maintain application state and provides simple interface to bind state to UI components. It has utilities to set or get deep properties of a nested data.
