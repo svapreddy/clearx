@@ -7,31 +7,52 @@ It works with React class components and Function UI components. UI components r
 
 ##### Installation:
 
-```shell
-npm install clearx --save
+```sh
+$ npm install clearx --save
 ```
 
-##### Creating a Store:
+##### Usage:
+
+There are three steps involved in using `ClearX`.
+
+###### Create a store:
+
+First step in using Clearx is creating a store. `ClearX` uses paths to get and set deep properties of data so it doesn't enforce existence of all properties upfront. Which means, UI components can link to non-existing properties of the store. Initially they might receive undefined value, but they will be made available when the data at those paths is set. Let's take a look at an example
 
 ```javascript
 
-/* -------- Create store -------- */
+import ClearX from `clearx`;
 
-// step 1: import the clearx library
-import ClearX from `clearx`
-// step 2: create store with the default data
 let store = new Clearx({
-  name: 'Clearx Library',
-  age: 1,
-  tags: ['global-store', 'global-state', 'react'],
-  worksWith: {
-    react: true,
-    preact: true,
-    inferno: true
-  }
-})
-// step 3: export
-export default store
+  user: {
+    id: '',
+    name: ''
+  },
+  todos: []
+});
+
+export default store;
+
+```
+Note that, the data can be a plain Object or a custom model long as it's properties can be accessed or changed using bracket notation  `data[property]`
+
+###### Create re-usable data segments (optional):
+
+
+```javascript
+
+import store from './store'
+
+export const $name = store.paths('user.name')
+
+export const $userInfo = store.paths(['user.id', 'user.name'])
+
+export const $user = store.paths('id')
+
+export const $todos = store.paths('todos')
+
+```
+
 
 /* -------- Create observable data segments -------- */
 
