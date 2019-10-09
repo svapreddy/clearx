@@ -41,16 +41,17 @@ Note that, the data can be a plain Object or a custom model long as it's propert
 
 ```javascript
 
-import store from './store'
+import store from './store';
 
-export const $name = store.paths('user.name')
-
-export const $userInfo = store.paths(['user.id', 'user.name'])
-
-export const $user = store.paths('id')
-
-export const $todos = store.paths('todos')
-
+const $name = store.paths('user.name');
+const $basic = store.paths(['user.id', 'user.name']);
+const $user = store.paths('user');
+const $todos = store.paths('todos');
+const $todosLength = store.paths('todos.length');
+const $data = store.paths({
+  id: 'user.id'
+  name: 'user.name'
+});
 ```
 
 
