@@ -50,14 +50,14 @@ import store from './store';
 const App = () => {
 
   let [ name ] = store.paths('user.name').link(useState());
-  let [ todoLength, unlink ] = store.paths('todos.length').link(useState());
+  let [ todosCount, unlink ] = store.paths('todos.length').link(useState());
 
   useEffect(() => unlink, []);
 
   return (
     <Fragment>
       <span>Name: { name }</span>
-      <span>Todos count: { todoLength }</span>
+      <span>Todos count: { todosCount }</span>
     </Fragment>
   );
 }
