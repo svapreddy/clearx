@@ -5,17 +5,17 @@
 
 It works with React class components and Function UI components. UI components re-render automatically when bound data changes.
 
-##### Installation:
+#### Installation:
 
 ```sh
 $ npm install clearx --save
 ```
 
-##### Usage:
+#### Usage:
 
 There are three steps involved in using `ClearX`.
 
-###### Create a store:
+##### Create a data store:
 
 First step in using Clearx is creating a store. `ClearX` uses paths to get and set deep properties of data so it doesn't enforce existence of all properties upfront. Which means, UI components can link to non-existing properties of the store. Initially they might receive undefined value, but they will be made available when the data at those paths is set. Let's take a look at an example
 
@@ -36,89 +36,63 @@ export default store;
 ```
 Note that, the data can be a plain Object or a custom model long as it's properties can be accessed or changed using bracket notation  `data[property]`
 
-###### Create re-usable data segments (optional):
+##### Bind data store to the UI components:
 
+`ClearX` works with class components and function components. It can also be used as independent data observer.
+
+###### Function component:
 
 ```javascript
 
+import React, { Fragment } from 'react';
 import store from './store';
 
-const $name = store.paths('user.name');
-const $basic = store.paths(['user.id', 'user.name']);
-const $user = store.paths('user');
-const $todos = store.paths('todos');
-const $todosLength = store.paths('todos.length');
-const $data = store.paths({
-  id: 'user.id'
-  name: 'user.name'
-});
-```
-
-
-/* -------- Create observable data segments -------- */
-
-// Note: properties can be non-existent. Segments are updated automatically when they are created.
-
-// A single path can be provided
-const name = store.paths('name')
-console.log(name.data) // Clearx Library
-
-const supportReact = store.paths('worksWith.react')
-console.log(supportReact.data) // true
-
-// Array of paths can be provided
-const basicInfo = store.paths(['name', 'age']) 
-console.log(basicInfo.data) // ['Clearx Library', 1]
-
-// Or a map of aliases and paths can be provided
-const info = store.paths({
-  inferno: 'worksWith.inferno',
-  age: 'age',
-  firstTag: 'tags.0'
-})
-console.log(info.data) // { age: 1, inferno: true, firstTag: 'global-store' }
-
-/* -------- Bind observable data segments to UI -------- */
-
-// Functional component
-
 const App = () => {
-  
-  // a ui component can bound to multiple data segments
-  let [ information ] = info.link(useState())
-  let [ supportsReact, unlinkAll ] = supportReact.link(useState())
 
-  useEffect(() => unlinkAll, [])
+  let [ name ] = store.paths('user.name').link(useState());
+  let [ todoLength, unlink ] = store.paths('todos.length').link(useState());
+
+  useEffect(() => unlink, []);
 
   return (
-    <>
-      <div>supports react: {supportsReact}></div>
-      <div>age: {information.age}</div>
-      <div>supports inferno: {information.inferno}</div>
-      <div>firstTag: {information.firstTag}</div>
-    </>
-  )
+    <Fragment>
+      <span>Name: { name }</span>
+      <span>Todos count: { todoLength }</span>
+    </Fragment>
+  );
 }
 
-// Class component
+export default App;
+
+```
+
+###### Class component:
+
+```javascript
+
+import React, { Fragment } from 'react';
+import store from './store';
 
 class App {
   constructor (props) {
     super(props)
-    info.link(this)
-    console.log(this.state.store) // { age: 1, inferno: true, firstTag: 'global-store' }
+    store.paths({
+      name: 'user.name',
+      todos: 'todos'
+    }).link(this)
   }
   render () {
-    const { store } = this.state
+    const { name, todos } = this.state.store
     return (
-      <>
-        <div>age: {store.age}</div>
-        <div>supports inferno: {store.inferno}</div>
-        <div>firstTag: {store.firstTag}</div>
-      </>
+      <Fragment>
+        <div>name: { name }</div>
+        <div>todos: { JSON.stringify(todos) } </div>
+      <Fragment/>
     )
   }
 }
+
+export default App;
 
 ```
 
