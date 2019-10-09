@@ -1,4 +1,3 @@
-<span style="color:red">test</span>
 <h1 align="center">ClearX</h1>
 <div align="center"> Simple state management for React. </div>
 
