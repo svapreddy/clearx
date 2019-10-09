@@ -1,17 +1,8 @@
 <h1 align="center">ClearX</h1>
-<div align="center"> Simple global store for React. </div>
+<div align="center"> Simple state management for React. </div>
 <br />
 
-## Table of Contents
-- [Introduction](#introduction)
-- [Usage](#usage)
-- [Todo example & Comparison](#example-todo-implementation-using-react-and-clearx)
-- [API](#api)
-- [Compatibility](#compatibility)
- 
-#### Introduction: 
-
-`ClearX` provides an alternative way to manage the global store for the React application.
+`ClearX` provides an alternative way to maintain application state and provides simple interface to bind state to UI components. It has utilities to set or get deep properties of a nested data.
 
 Advantages:
 
