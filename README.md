@@ -13,7 +13,7 @@ $ npm install clearx --save
 
 #### Usage:
 
-There are three steps involved in using `ClearX`.
+There are two steps involved in using `ClearX`.
 
 ##### Create a data store:
 
