@@ -1,21 +1,11 @@
 <h1 align="center">ClearX</h1>
-<div align="center"> Simple state management for React. </div>
-
 <br />
 
-`ClearX` provides an alternative way to maintain application state and provides simple interface to bind state to UI components. It has utilities to set or get deep properties of a nested data.
+`ClearX` provides an alternative way to maintain application state and provides simple interface to bind state to UI components. It has utilities to set or get deep properties of a nested data using paths.
 
-Advantages:
+It works with React class components and Function UI components. UI components re-render automatically when bound data changes.
 
-- Cleax is fast and small. Usage is very simple.
-- Automatically triggers the UI Component's re-render process only when depending data change.
-- Provides rich set of API to operate on data.
-- Properties can be accessed before they are created.
-- Works with Class components, Functional Components and plain objects.
-
-#### Usage:
-
-##### Install:
+##### Installation:
 
 ```shell
 npm install clearx --save
