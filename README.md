@@ -42,7 +42,7 @@ Note that, the data can be a plain Object or a custom model long as it's propert
 
 ###### Function component:
 
-```javascript
+```jsx
 
 import React, { Fragment } from 'react';
 import store from './store';
@@ -68,7 +68,7 @@ export default App;
 
 ###### Class component:
 
-```javascript
+```jsx
 
 import React, { Fragment } from 'react';
 import store from './store';
