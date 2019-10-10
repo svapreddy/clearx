@@ -453,3 +453,7 @@ Checks if the value at the given path is equal to the provided value.
 ```javascript
 console.log( store.isEqual('users.0.age', 300) ) // true
 ```
+
+### Contributing:
+
+Please check [guidelines](CONTRIBUTING.md) for more details.
