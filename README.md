@@ -335,7 +335,7 @@ store.pop('nums')
 console.log(store.get('nums')) // [100, -1, 1, 2, 3, -10]
 ```
 
-#### `store.shuft(path)`
+#### `store.shift(path)`
 
 Removes the value from the start of the array at the given path.
 
