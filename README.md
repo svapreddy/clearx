@@ -24,11 +24,27 @@ First step in using Clearx is creating a store. `ClearX` uses paths to get and s
 import ClearX from `clearx`;
 
 let store = new Clearx({
-  user: {
-    id: '',
-    name: ''
+  id: 'Brave Browser',
+  version: 'v0.68.140',
+  settings: {
+    File: true,
+    Edit: true,
+    History: true,
+    Bookmarks: true,
+    Window: true,
+    Help: true,
+    DevTools: true
   },
-  todos: []
+  openTabs: 3,
+  users: [{
+    email: 'john.doe@test.com',
+    name: 'John Doe',
+    age: 300
+  }, {
+    email: 'doe.john@test.com',
+    name: 'Doe John',
+    age: 50
+  }]
 });
 
 export default store;
@@ -40,7 +56,9 @@ Note that, the data can be a plain Object or a custom model long as it's propert
 
 `ClearX` works with class components and function components. It can also be used as independent data observer.
 
-###### Function component:
+Now let's bind the store to a function component. `ClearX` uses `useState()` hook to make latest state available to component. That means, whenever data at a path is updated, if the component is interested in data at that path, the setter of `useState()` is called with latest state. Which internally triggers a re-render. Also note that, if data at particular path is number `3` and store's set method is called to update the value to 3. Because they are equal ClearX does not cause the re-render. Which is same for any type of value. ClearX tries to avoid unnecessary re-renders.
+
+In below example lets try to link some properties to the component
 
 ```jsx
 
@@ -49,16 +67,25 @@ import store from './store';
 
 const App = () => {
 
-  let [ name ] = store.paths('user.name').link(useState());
-  let [ todosCount, unlink ] = store.paths('todos.length').link(useState());
+  let [ identity ] = store.paths(['id', 'version']).link(useState());
+  let [ usersCount ] = store.paths('users.length').link(useState());
+  let [ openTabs ] = store.paths('openTabs').link(useState());
+  let [ settings, unlink ] = store.paths({
+    devTools: 'settings.DevTools',
+    history: 'settings.History'
+  }).link(useState());
 
   useEffect(() => unlink, []);
 
   return (
-    <Fragment>
-      <span>Name: { name }</span>
-      <span>Todos count: { todosCount }</span>
-    </Fragment>
+    <code>
+      Id: { identity[0] }
+      Version: { identity[0] }
+      openTabs: { openTabs }
+      UsersCount: { usersCount }
+      DevToolsEnabled: { settings.devTools }
+      HistoryEnabled: { settings.history }
+    </code>
   );
 }
 
@@ -66,7 +93,9 @@ export default App;
 
 ```
 
-###### Class component:
+In above example, component is bound to selected paths of the store. Change in any of those paths will trigger a re-render. And unlink method is called when component is unmounted. It will teardown all the data observers.
+
+Now let's try to bind the data to a class component.
 
 ```jsx
 
@@ -76,18 +105,28 @@ import store from './store';
 class App {
   constructor (props) {
     super(props)
+    
     store.paths({
-      name: 'user.name',
-      todos: 'todos'
+      Id: 'id'
+      Version: 'version'
+      openTabs: 'openTabs'
+      UsersCount: 'users.length'
+      DevToolsEnabled: 'settings.DevTools'
+      HistoryEnabled: 'settings.History'
     }).link(this)
+    
   }
   render () {
-    const { name, todos } = this.state.store
+    const { Id, Version, openTabs, UsersCount, DevToolsEnabled, HistoryEnabled } = this.state.store
     return (
-      <Fragment>
-        <div>name: { name }</div>
-        <div>todos: { JSON.stringify(todos) } </div>
-      <Fragment/>
+      <code>
+        Id: { Id }
+        Version: { Version }
+        openTabs: { openTabs }
+        UsersCount: { UsersCount }
+        DevToolsEnabled: { DevToolsEnabled }
+        HistoryEnabled: { HistoryEnabled }
+      </code>
     )
   }
 }
@@ -95,3 +134,6 @@ class App {
 export default App;
 
 ```
+
+If you notice, unlinking is not required for class components. It is due to the availability of unmount callback. We will learn more about the linking and unlinking in API section.
+
