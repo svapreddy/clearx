@@ -143,11 +143,9 @@ If you notice, unlinking is not required for class components. It is due to the 
 
 `ClearX` has familiar API. It provides some utilities to operate on the data and provides flexibility to bind data as per your application requirements.
 
-##### ClearX(Data, Options) (Class)
+##### new ClearX(Data, Options) (Class)
 
-Input: _Data, whose properties can be accessed using bracket notation. Options, if you want to use custom delimiter other than `.`_
-
-It's a class used to create store. It's an entry point to use ClearX. It's a repetition but please note that, the data can be a plain Object or a custom model as long as it's properties can are accessible using bracket notation  `data[property]`. Latest data is available to UI components whenever data is changed. The example above pretty much covers how to create a Store using `ClearX`. Here is a basic syntax
+It's the class used to create store. It's an entry point to use ClearX. It's a repetition but please note that, the data can be a plain Object or a custom model as long as it's properties can are accessible using bracket notation  `data[property]`. Latest data is available to UI components whenever data is changed. The example above pretty much covers how to create a Store using `ClearX`. Here is a basic syntax
 
 ```javascript
 const store = new ClearX(data, {
@@ -157,15 +155,15 @@ const store = new ClearX(data, {
 
 **Note**: _Below API is available on the instance of the ClearX class. We will be assuming data provided in above example._
 
-##### ClearX.paths (Function)
-
-Input: _Array of paths or path or map of paths using aliases_
+##### `store.paths(path)`
 
 This is a critical peice of `ClearX`. This method let's you link data from store to a component. When this method is called with paths satisfying the input format required, a new Data segment is created internally. This data segment allows to link to a ui component or observe changes or transform the data before it's supplied to the ui components. The data segment returned can be re-used across components. Until atleast one UI component is attached to a data segment it does not listen for data changes unless we force it to do.
 
 ```javascript
  
 const $identity = store.paths(['id', 'version']); // re-usable data segment
+
+// Params to store.paths can be a path or array of paths or map of paths using aliases
 
 // Link the data to a function component. Inside function component do like this
 
@@ -204,9 +202,7 @@ $identity.teardown();
   
 ```
 
-##### ClearX.bind (Function)
-
-Input: _Options, paths, to, afterUpdate, dataTransformer_
+##### `store.bind(options)`
 
 bind is created to aggregate multiple calls to `paths` function. Let's take a look at below example:
 
@@ -219,10 +215,9 @@ const [info, unlink] = store.bind({
 });
 ```
 
-##### ClearX.get (Function)
-Input: _Path_
+##### `store.get(path)`
 
-Returns the value at the path. Returns undefined if property at the path does not exist.
+Returns the value at the provided path or undefined if property at the path does not exist.
 
 ```javascript
 const DevToolsEnabled = store.get('settings.DevTools');
@@ -231,9 +226,159 @@ console.log(DevToolsEnabled); // true
 const ScreenshotEnabled = store.get('settings.Screenshot');
 console.log(ScreenshotEnabled); // undefined
 
+const someDeepProperty = store.get('a.b.c.d.e.3');
+console.log(someDeepProperty); // undefined
+
 const User2 = store.get('users.1');
 console.log(User2); // { email: 'doe.john@test.com', name: 'Doe John', age: 50 }
 
 ```
 
+##### `store.set(path, value, dontReplace)`
 
+Assigns the value at the provided path. If path does not exist, it will create objects required to set value at the path.
+
+```javascript
+
+store.set('settings.Screenshot', true);
+console.log(store.get('settings.Screenshot')); // true
+
+store.set('a.b.c.d.e.0', ['test']);
+console.log(store.get('a.b.c.d.e')) // ['test']
+console.log(store.get('a.b.c.d.e.0')) // { a: { b: { c: { d: { e: ['test'] }}}}}
+
+store.set('id', 'some-other-id', true);
+console.log(store.get('version')) // Brave Browser. Because dontReplace make it set only if it does not exist
+
+```
+
+##### `store.empty(path)`
+
+Clears the value at the provided path. It is type aware. That means, if you call empty on an array it will make it empty array. 
+
+```javascript
+
+store.set('preferences.cookies', true)
+store.empty('preferences.cookies')
+console.log(store.get('preferences.cookies')) // false
+
+console.log(store.get('users.0.age')) // 300
+store.empty('users.0.age');
+console.log(store.get('users.0.age')) // 0
+
+store.set('openPages', ['https://www.google.com', 'https://www.github.com']);
+store.empty('openPages');
+console.log(store.get('openPages')) // []
+
+store.set('prefs', { cookies: true, javascript: true });
+store.empty('prefs');
+console.log(store.get('prefs')) // {}
+
+```
+
+#### `store.coalesce(paths, defaultValue)`
+
+Returns the first not undefined value from the provided array of paths
+
+```javascript
+const val = store.coalesce(['prop\\.does\\.not\\.exist', 'id']);
+console.log(val); // Brave Browser
+
+// Please note that delimiter (default '.') can be escaped using \\
+const val2 = store.coalesce(['prop\\.does\\.not\\.exist', 'xyz'], 10);
+console.log(val2) // 10. Returns provided default value
+
+```
+
+#### `store.insert(path, value, position)`
+
+Inserts the value in the array at the given path and position. If the array does not exists at path, this method will create one and inserts the value.
+
+```javascript
+store.set('nums', [1, 2, 3]);
+
+store.insert('nums', -1, 0)
+console.log(store.get('nums')) // [-1, 1, 2, 3]
+
+// If position is not provided, insert will act as push
+store.insert('nums', -10)
+console.log(store.get('nums')) // [-1, 1, 2, 3, -10]
+```
+
+#### `store.push(path, value1, value2 ...valueN)`
+
+Push values to the end of the array at the given path. If the array does not exists at path, this method will create one and push the value.
+
+```javascript
+
+store.push('nums', -1, 0)
+console.log(store.get('nums')) // [-1, 1, 2, 3, -10, -1, 0]
+```
+
+#### `store.unshift(path, value1, value2 ...valueN)`
+
+Inserts values to the start of the array at the given path. If the array does not exists at path, this method will create one and inserts the values.
+
+```javascript
+
+store.unshift('nums', 100)
+console.log(store.get('nums')) // [100, -1, 1, 2, 3, -10, -1, 0]
+```
+
+#### `store.pop(path)`
+
+Removes the value from the end of the array at the given path.
+
+```javascript
+store.pop('nums')
+store.pop('nums')
+console.log(store.get('nums')) // [100, -1, 1, 2, 3, -10]
+```
+
+#### `store.shuft(path)`
+
+Removes the value from the start of the array at the given path.
+
+```javascript
+store.shift('nums')
+console.log(store.get('nums')) // [-1, 1, 2, 3, -10]
+```
+
+#### `store.splice(path, ...args)`
+Similar to Array splice method. Applies splice on array at the given path using provided arguments.
+
+```javascript
+store.splice('nums', 2, 1) // A remove operation
+console.log(store.get('nums')) // [-1, 1, 3, -10]
+
+store.splice('nums', 2, 0, 100) // An insert operation
+console.log(store.get('nums')) // [-1, 1, 100, 3, -10]
+```
+
+#### `store.slice(path, ...args)`
+Similar to Array slice method. Applies slice on array at the given path using provided arguments and returns the value
+
+```javascript
+console.log(store.slice('nums', 0, 2)) // [-1, 1]
+```
+
+#### `store.sort(path, ...args)`
+
+Similar to Array sort method. Applies sort on array at the given path using provided arguments.
+
+```javascript
+
+store.sort('nums', (a, b) => { return a - b; });
+console.log(store.get('nums')) // [-10, -1, 1, 3, 100]
+
+store.sort('nums', (a, b) => { return b - a; });
+console.log(store.get('nums')) // [100, 3, 1, -1, -10]
+```
+
+#### `store.ensureExists(path, defaultValue)`
+Creates an entry at the provided path. If value at the path does not exist, it will set the defaultValue at the path
+
+```javascript
+store.ensureExists('some.prop')
+console.log(store.ensureExists('some.prop')) // null
+```
