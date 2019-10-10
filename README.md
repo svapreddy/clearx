@@ -379,6 +379,77 @@ console.log(store.get('nums')) // [100, 3, 1, -1, -10]
 Creates an entry at the provided path. If value at the path does not exist, it will set the defaultValue at the path
 
 ```javascript
-store.ensureExists('some.prop')
-console.log(store.ensureExists('some.prop')) // null
+console.log(store.get('some.prop')) // undefined
+store.ensureExists('some.prop', 10)
+console.log(store.get('some.prop')) // 10
+```
+
+#### `store.has(path)`
+Checks whether an entry exists or not at the provided path.
+
+```javascript
+store.has('settings') // true
+```
+
+#### `store.delete(path)`
+
+Deletes the entry at the given path
+
+```javascript
+store.delete('some.prop')
+console.log(store.has('some.prop')) // false
+console.log(store.has('some')) // true
+
+store.unshift('nums', 1)
+console.log(store.get('nums')) // [1, 100, 3, 1, -1, -10]
+store.delete('nums.0')
+console.log(store.get('nums')) // [100, 3, 1, -1, -10]
+```
+#### `store.merge(path, data)`
+
+Merge the existing data at the given path with provided data. Does not cause re-render is existing data and provided data are same.
+
+```javascript
+store.merge('settings', { syncBookmarks: true })
+```
+
+#### `store.increment(path, by = 1)`
+
+Increments the value at the given path and by value. If value at the path does not exist or not a number, it will assign `0` and then does the increment.
+
+```javascript
+store.increment('users.0.age')
+console.log(store.get('users.0.age')) // 301
+store.increment('users.0.age', 100)
+console.log(store.get('users.0.age')) // 401
+```
+
+#### `store.decrement(path, by = 1)`
+
+Decrements the value at the given path and by value. If value at the path does not exist or not a number, it will assign `0` and then does the decrement.
+
+```javascript
+store.decrement('users.0.age')
+console.log(store.get('users.0.age')) // 400
+store.decrement('users.0.age', 100)
+console.log(store.get('users.0.age')) // 300
+```
+
+#### `store.toggle(path)`
+
+Toggles the boolean value at the given path. If value at the path does not exist or not a number, it will assign `0` and then does the decrement.
+
+```javascript
+store.toggle('settings.Sync')
+console.log(store.get('settings.Sync')) // true
+store.get('settings.Sync')
+console.log(store.get('settings.Sync')) // false
+```
+
+#### `store.isEqual(path, val)`
+
+Checks if the value at the given path is equal to the provided value.
+
+```javascript
+console.log( store.isEqual('users.0.age', 300) ) // true
 ```
