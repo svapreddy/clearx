@@ -1,460 +1,466 @@
 <h1 align="center">ClearX</h1>
-<div align="center"> Simple global state management for React, Preact and Inferno. </div>
 <br />
 
-## Table of Contents
-- [Introduction](#introduction)
-- [How ClearX works](#how-clearx-works)
-- [Philosophy](#philosophy)
-- [Usage](#usage)
-- [Todo example & Comparison](#example-todo-implementation-using-react-and-clearx)
-- [API](#api)
-- [Compatibility](#compatibility)
- 
-#### Introduction: 
+`ClearX` is an alternative way to Redux and MobX to maintain the application state and provides a simple interface to bind it to UI components. It has utilities to set or get deep properties of nested data using paths.
 
-`ClearX` provides an alternative & very simple way to manage the global state for the Frontend application. Check this [link](https://codesandbox.io/embed/v6ln04730?fontsize=14) for a basic Todo App demo or check out Todo example section
+It works with React class components and Function UI components. UI components re-render automatically when bound data changes.
 
-###### Advantages:
+#### Installation:
 
-- Insanely simple to use. Fast & small (3kb)
-- Re-renders UI components only when dependent data is changed in Store
-- The store can be accessed, changed from anywhere in an application using an expressive API
-- The store is a plain reactive JS Object.
-- No limitations for adding new properties to the existing store after creation
-- Local state and global store can be used together. No restrictions. No limit on the number of stores. Store data is reversible & cloneable
-- Makes it easy to work with 3rd party libraries that have no react flavour in them
-- Helps to write tree-shaking friendly codebase.
-- Compatible with React, Preact, and Inferno without any configurational changes.
-
-It's this simple:
-
-```javascript
-Store.bind({
-  paths: {
-    fileOne: ['file', 'one']
-  },
-  to: this
-})
+```sh
+$ npm install clearx --save
 ```
 
-Note: Earlier versions used `slice` method. It will work without any problem. But the bind method is recommended. For usage of slice method please check tests.
-
-###### How `ClearX` works:
-
-The initial step in ClearX is creating an application data structure and creating a ClearX data store instance. Data attached to this instance can be accessed & modified from anywhere in the application including UI components that share React UI component structure.
-
-ClearX provides a way to slice parts of data from the store and use it. This slice can be plugged to UI components. The slice keeps itself in sync with the latest data from the data store. When data is changed, the slice will trigger the UI component's re-render process and calls the afterUpdate callback.
-
-Data store provides an expressive API to modify the data in the store.
-
-###### Philosophy:
-
-UI represents complex business-related operations of an application using a visual layer. UI layer often goes through a lot of iterations and sometimes requires to refactor in an Agile development environment. Global State Management is the spine part of an application & deserve to be simple for the long run. If we keep it simple to understand for Developers, it helps to maintain the application performance and quality of the application.
+#### Version 1.x
+For version 1.x please checkout [1.x Documentation](./README.1.x.md)
 
 #### Usage:
 
-##### Install:
+There are two steps involved in using ClearX.
 
-```shell
-npm install clearx --save
-```
+##### Create a datastore:
 
-##### Creating a Store:
+The first step in using Clearx is creating a store. `ClearX` uses paths to get and set deep properties of data, so it doesn't enforce the existence of all properties upfront. It means UI components can link to the non-existing properties of the store. Initially, they might receive undefined value, but they will be available to UI components when the data at those paths are updated. Let's take a look at an example:
 
 ```javascript
-import ClearX from `clearx`
 
-// Application data structure.
-let ApplicationData = {
-  user: {
-    signedIn: false
+import ClearX from `clearx`;
+
+let store = new Clearx({
+  id: 'Brave Browser',
+  version: 'v0.68.140',
+  settings: {
+    File: true,
+    Edit: true,
+    History: true,
+    Bookmarks: true,
+    Window: true,
+    Help: true,
+    DevTools: true
   },
-  test: 'one',
-  data: {
-    files: {
-      file1: {
-        name: 'my file1.txt'
-      }
-    }
-  },
-  a: {
-    b: "d",
-    c: ["e", "f"]
-  }
+  openTabs: 3,
+  users: [{
+    email: 'john.doe@test.com',
+    name: 'John Doe',
+    age: 300
+  }, {
+    email: 'doe.john@test.com',
+    name: 'Doe John',
+    age: 50
+  }]
+});
+
+export default store;
+
+```
+Note that, the data can be a plain Object or a custom model long as it's properties can be accessed or changed using bracket notation  `data[property]`. The latest data is available to UI components whenever bound is changed.
+
+##### Bind data store to the UI components:
+
+`ClearX` works with class components and function components. It can also be used as an independent data observer.
+
+Now let's bind the store to a function component. `ClearX` uses `useState()` hook to make the latest state available to the component. That means, whenever data at a path is updated, and any component is interested in data at that path, the setter of `useState()` is called with the updated data. Which internally triggers a re-render. Also, note that if data at a particular path is number `3` and the store's set method is called to update the value to 3. Because they are equal, ClearX does not cause the re-render, which is the same for any value. ClearX tries to avoid unnecessary re-renders.
+
+In the below example, let's try to link some properties to the component.
+
+```jsx
+
+import React, { Fragment } from 'react';
+import store from './store';
+
+const App = () => {
+
+  let [ identity ] = store.paths(['id', 'version']).link(useState());
+  let [ usersCount ] = store.paths('users.length').link(useState());
+  let [ openTabs ] = store.paths('openTabs').link(useState());
+  let [ settings, unlink ] = store.paths({
+    devTools: 'settings.DevTools',
+    history: 'settings.History'
+  }).link(useState());
+
+  useEffect(() => unlink, []);
+
+  return (
+    <code>
+      Id: { identity[0] }
+      Version: { identity[0] }
+      openTabs: { openTabs }
+      UsersCount: { usersCount }
+      DevToolsEnabled: { settings.devTools }
+      HistoryEnabled: { settings.history }
+    </code>
+  );
 }
 
-// Create clearx instance with the data
-let appStore = new ClearX(ApplicationData)
-
-export default appStore
+export default App;
 
 ```
 
-##### Slicing and Attaching the data store to a UI Component
+In the above example, the component is bound to selected paths of the store. Change in any of those paths will trigger a re-render. And the unlink method is called when the component is unmounted. It will tear down all the data observers. Also, please note that useState() is required to remember the context of the function component. Without that, clearx will not be able to decide whether to reuse the already created data segment for the component or create a new one.
 
-```javascript
-import React, { Component } from 'react'
+Now let's try to bind the data to a class component.
 
-// Import application store
-import appStore from './src/storeFile.js'
+```jsx
 
-// It can be a class or a function. ClearX works with all.
-class MyView extends Component {
+import React, { Fragment } from 'react';
+import store from './store';
+
+class App {
   constructor (props) {
     super(props)
-    // UI Component can have a local state. Optional step!
-    this.state = {
-      localState1: 'test'
-    }
-    appStore.bind({
-      paths: {
-        // Non existent keys can be used. ClearX automatically updates components when data is available.
-        // Array format over 'data.files.file1' guards against unexpected . in keypath
-        fileOne: ['data', 'files', 'file1']
-      },
-      to: this,
-      // Optional. Sets the default data for above paths.
-      withDefaultData: {
-        fileOne: {
-          name: 'FileOne.txt'
-        }
-      },
-      // Optional events
-      events: {
-        // Called after data is updated.
-        afterUpdate: this.afterUpdate.bind(this)
-      },
-      // Optional. Automatically detected for React family UI components
-      isReactFamilyUIComponent: true
-    })
-    // Data bound is automatically destroyed.
-    // Expected: { localState1: 'test', store: { fileOne: <data from path> }}
-    console.log(this.state.store)
-  }
-  afterUpdate (data) {
-    console.log('State updated', data)
+    
+    store.paths({
+      Id: 'id'
+      Version: 'version'
+      openTabs: 'openTabs'
+      UsersCount: 'users.length'
+      DevToolsEnabled: 'settings.DevTools'
+      HistoryEnabled: 'settings.History'
+    }).link(this)
+    
   }
   render () {
-    // Note: Always `this.state.store`
-    let { fileOne } = this.state.store
+    const { Id, Version, openTabs, UsersCount, DevToolsEnabled, HistoryEnabled } = this.state.store
     return (
-      <div>{fileOne.name}</div>
+      <code>
+        Id: { Id }
+        Version: { Version }
+        openTabs: { openTabs }
+        UsersCount: { UsersCount }
+        DevToolsEnabled: { DevToolsEnabled }
+        HistoryEnabled: { HistoryEnabled }
+      </code>
     )
   }
 }
 
+export default App;
+
 ```
 
-##### Slicing and attaching the data store to a plain class
+If you notice, unlinking is not required for class components. It is due to the availability of unmounting callback. We will learn more about the linking and unlinking in the API section.
+
+<hr />
+
+#### API:
+
+`ClearX` has a familiar API. It provides some utilities to operate on the data and provides flexibility to bind data as per your application requirements.
+
+##### new ClearX(Data, Options) (Class)
+
+It's the class used to create the store. It's an entry point to use ClearX. It's a repetition, but please note that the data can be a plain Object or a custom model as long as it's properties can are accessible using bracket notation  `data[property]`. Latest data is available to UI components whenever data is changed. The example above pretty much covers how to create a Store using `ClearX`. Here is a basic syntax
 
 ```javascript
-
-import appStore from './src/storeFile.js'
-
-class Account {
-  constructor () {
-    this.sliced = appStore.bind({
-      paths: {
-        signedIn: ['user', 'signedIn']
-      },
-      to: this,
-      events: {
-        afterUpdate: this.checkData.bind(this)
-      }
-    })
-    // If not react component, the location for sliced data is `this.store`
-    console.log(this.store)
-  }
-  checkData () {
-    if (this.store.signedIn) {
-      // Fetch some initial data
-    }
-  }
-  destroy () {
-    // Need manual destroy for non UI components
-    this.sliced.destroy()
-  }
-}
-
-export default Account
+const store = new ClearX(data, {
+  // Optional. default value is '.'. In case if you prefer using some other delimiter instead of "." please use this option.
+  delimiter: '-' 
+});
 ```
 
-##### Slicing and attaching the data store to a plain JavaScript Object
+**Note**: _Below API is available on the instance of the ClearX class. We will be assuming the data provided in the above example._
+
+##### `store.paths(path)`
+
+`paths` is a critical piece of `ClearX`. This method lets you link data from the store to a component. When this method is called with paths satisfying the input format required, a new Data segment is created internally. This data segment allows to link to a UI component or observe changes or transform the data before it's supplied to the UI components. The data segment returned can be reused across components. Until at least one UI component is attached to a data segment, it does not listen for data changes unless we force it to do.
 
 ```javascript
-import appStore from './src/storeFile.js'
-
-let data = {}
-
-appStore.bind({
-  paths: {
-    fileTwo: ['data', 'files', 'file2']
-  },
-  to: this,
-  events: {
-    afterUpdate: checkData
-  }
-})
-
-let checkData = () => {
-   // If not react component, the location is `this.store`
-   if (data.store.signedIn) {
-     // Fetch some initial data
-   }
-}
-
-```
-
-##### Accessing & updating the application store without using slice.
-
-```javascript
-// Import appStore from file.
-import appStore from './src/storeFile.js'
-
-class MyCls {
-  constructor () {
-    this.updateData()
-  }
-  updateData () {
-    appStore.set(["a", "b"], "test")
-    this.checkData()
-  }
-  checkData () {
-    appStore.get(["a", "b"]) // Will be equal to "test"
-  }
-}
-
-export default MyCls
-```
-
-##### Data reversal example
-
-Data revert example:
-
-```javascript
-import appStore from './src/storeFile.js'
-
-class MyCls {
-  constructor () {
-    this.sliceInstance = appStore.bind({
-      paths: {
-        fileTwo_Name: ['data', 'files', 'file2', 'name']
-      },
-      to: this
-    })
-    this.postName()
-  }
-  checkData () {
-    let instance = this.sliceInstance
-    let old = instance.clone
-    instance.slice = {
-      fileTwo_Name: 'new name.txt'
-    }
-    makeSomeCall().then(() => {
-      // all good
-    }, () => {
-      // ClearX will internally check for changes and updates other slices if there are any changes.
-      instance.slice = old
-    })
-  }
-}
-
-export default MyCls
-```
-
-### Example Todo implementation using React and ClearX
-
-Please run:  
-
-```sh
-  $ npm install
-  $ npm install -g rollup
-  $ npm run todo 
-```
-
-Now go to http://localhost:8719/ to access todo application. The source is available under `./example` folder.
-
-### API:
-
-The ClearX instance has below API:
-
-#### <code>bind</code>:  
-Get a slice of data from the store & attach.
-
-```javascript
-let sliceInstance = appStore.bind({
-  // Key map
-  paths: {
-    fileOne: ['data', 'files', 'file1']
-  },
-  // Context
-  to: this,
-  // Default data to set in data store
-  withDefaultData: {
-    fileOne: 'my default filename.txt'
-  },
-  // Optional events
-  events: {
-    afterUpdate: function(data) {
-      console.log('After store data is updated: ', data)
-    }
-  },
-  // Optional. Automatically detected for React like components
-  isReactFamilyUIComponent: true
-})
-console.log(sliceInstance.slice) // Data slice
-sliceInstance.destroy() // Destroy slice
-console.log(sliceInstance.clone) // Data slice clone
-sliceInstance.slice = {} // Compares and replace the data in data store
-```
-
-#### <code>slice (obsolete. Use bind)</code>:  
-Get a slice of data from the store & attach
-*`map:`*   
-Keys map. The path must be an array of keys. In above example ['data', 'files', 'file1'] is equal to `data.files.file1` but ClearX promotes array format to avoid conflicting with `.` in keys in data.
-
-*`context:`*   
-The instance where the returned slice is bound to.
-
-*`config:`*   
-Optional config can contain, `defaults` object, `updateCallback` function, `reactLike` boolean value.
-  
-```javascript
-// we do not need to store the sliceInstance if we don't have to call any methods on slice instance
-let sliceInstance = appStore.slice(
-  /* Keys map */
-  {
-    fileOne: ['data', 'files', 'file1']
-  }, 
-  /* context */ 
-  this, 
-  /* config */ 
-  {
-      // Default data to set in data store
-      defaults: {
-        fileOne: 'my default filename.txt'
-      },
-      // After data update event.
-      updateCallback: {}
-  }
-)
-
-console.log(sliceInstance.slice) // Data slice
-sliceInstance.destroy() // Destroy slice
-console.log(sliceInstance.clone) // Data slice clone
-sliceInstance.slice = {} // Compares and replace the data in data store
-```
-
-#### <code>destroy</code>:   
-Destroy the store. 
-```javascript
-appStore.destroy()
-```
-
-#### <code>localStores</code>:   
-Get list of slices initialized. 
-```javascript
-appStore.localStores
-```
-
-#### <code>data</code>:   
-Get the root store data. 
-```javascript
-appStore.data
-```
-
-> Remaining APIs below are adapted from [object-path](https://www.npmjs.com/package/object-path). It is an excellent library for operating on data. We can also check the documentation at this location. Except that we will not pass the data and key paths are always in key format. Methods from `object-path` are wrapped and exposed through store instance to trigger root store updates on data changes. `merge` method uses [deepmerge](https://www.npmjs.com/package/deepmerge)
-
-#### <code>get</code>:   
-
-Get deep property from root store. Takes key path as an input. 
-```javascript
-
-// Provide key to look for.
-appStore.get(["data", "files", "fileOne"])
-
-// works also with arrays
-appStore.get(["a", "c", "1"])
-
-// Can return a default value with get. Note: Does not update the root store with default value
-appStore.get(["a", "c", "b"], "DEFAULT")  // returns "DEFAULT", since ["a", "c", "b"] path doesn't exists, if omitted, returns undefined
-```
-
-#### <code>set</code>:  
-Set a value at given path. Triggers root store updates if new value is different from old value.
-
-```javascript
-appStore.set(["a", "h"], "m")
-appStore.get(["a", "h"])  //returns "m"
-// set will create intermediate object/arrays
-appStore.set(["a", "j", 0, "f"], "m")
-```
-
-#### <code>empty</code>:  
-empty a given path (but do not delete it) depending on their type, so it retains a reference to objects and arrays.
-functions that are not inherited from the prototype are set to null. object instances are considered objects and just own property names are deleted. Triggers root store updates
-
-```javascript
-appStore.empty(['a', 'b']) // ['a', 'b'] is now ''
-appStore.empty(['a', 'c']) // ['a', 'c'] is now []
-appStore.empty(['a']) // ['a'] is now {}
-```
-
-#### <code>del</code>:  
-Deletes a path. Also, Works on arrays. Triggers root store updates
-
-```javascript
-appStore.del(["a", "b"]) // Root store value at ["a", "b"] is now undefined
-appStore.del(["a", "c", 0]) // Root store value at ["a", "c"]is now ['f']
-```
-
-#### <code>insert</code>:  
-Insert values in array. Triggers root store updates
-
-```javascript
-appStore.insert(["a", "c"], "m", 1) // Data at ["a", "c"] will be ["e", "m", "f"]
-```
  
-#### <code>push</code>:  
-Push into arrays (and create intermediate objects/arrays). Triggers root store updates
+const $identity = store.paths(['id', 'version']); // re-usable data segment
 
-```javascript
-appStore.push(["a", "k"], "o")
+// Params to store.paths can be a path or array of paths or map of paths using aliases
+
+// Link the data to a function component. Inside function component do like this.
+
+const [ info, unlink ] = $identity.link( useState() ); // unlink() will remove links to all data segments from this component
+console.log(info) // Notice info is returned in format paths are supplied. i.e ['Brave Browser', 'v0.68.140']
+
+// Let's force it to observe data changes if you intend to use it for just observing data
+$identity.sync(true);
+
+// To turn off: 
+$identity.sync(false);
+
+// Listening for data changes
+
+$identity.onUpdate((data) => { console.log('data changed: handler 1'); });
+$identity.onUpdate((data) => { console.log('data changed: handler 2'); });
+
+/* 
+  It can be used for transforming the data before it's supplied to the UI components. These are applied in the sequence they are assigned.
+  It's optional. But if you have a requirement of transforming the data before supplying to UI component, it would be handy.
+*/
+
+$identity.dataTransformer((data) => {
+  return {
+    id: data[0],
+    version: data[1]
+  };
+});
+
+$identity.dataTransformer((data) => {
+  return {
+    Id: data.id,
+    Version: data.version
+  };
+});
+
+// Finally teardown.
+$identity.teardown();
+  
 ```
 
-#### <code>ensureExists</code>:  
-Ensure a path exists (if it doesn't, set the default value we provide). Triggers root store updates
+##### `store.bind(options)`
+
+`bind` is created to aggregate multiple calls to `paths` function. Let's take a look at below example:
 
 ```javascript
-appStore.ensureExists(["a", "k", "1"], "DEFAULT")
-let oldVal = appStore.ensureExists(["a", "b"], "DEFAULT") // oldval === "d"
+const [info, unlink] = store.bind({
+  paths: ['id', 'version'],
+  to: useState()
+  afterUpdate: (data) => { console.log('data is changed', data); },
+  dataTransformer: (data) => { return data; },
+});
 ```
 
-#### <code>has</code>:  
-Tests path existence
+##### `store.get(path)`
+
+Returns the value at the provided path or undefined if the property at the path does not exist.
 
 ```javascript
-appStore.has(["a", "b"]) // true
-appStore.has(["a", "d"]) // false
+const DevToolsEnabled = store.get('settings.DevTools');
+console.log(DevToolsEnabled); // true
+
+const ScreenshotEnabled = store.get('settings.Screenshot');
+console.log(ScreenshotEnabled); // undefined
+
+const someDeepProperty = store.get('a.b.c.d.e.3');
+console.log(someDeepProperty); // undefined
+
+const User2 = store.get('users.1');
+console.log(User2); // { email: 'doe.john@test.com', name: 'Doe John', age: 50 }
+
 ```
 
-#### <code>merge</code>
-Merges the data key with new data. Uses [deepmerge](https://www.npmjs.com/package/deepmerge) library. We can pass in same options
+##### `store.set(path, value, dontReplace)`
+
+`set` can be used to assign the value at the provided path. If the path does not exist, it will create objects required to set the value on the path.
+`dontReplace` would be handy if you have a requirement of updating a value if there no existing value.
 
 ```javascript
-appStore.merge(["a", "b"], {key: value}, {})
+
+store.set('settings.Screenshot', true);
+console.log(store.get('settings.Screenshot')); // true
+
+store.set('a.b.c.d.e.0', ['test']);
+console.log(store.get('a.b.c.d.e')) // ['test']
+console.log(store.get('a.b.c.d.e.0')) // { a: { b: { c: { d: { e: ['test'] }}}}}
+
+store.set('id', 'some-other-id', true);
+console.log(store.get('version')) // Brave Browser. Because dontReplace make it set only if it does not exist
+
 ```
 
-#### <code>coalesce</code>:  
-Get the first non-undefined value from list of keys provided.  
+##### `store.empty(path)`
+
+`empty` clears the value at the provided path. It is type aware. That means, if you call empty on an array, it will make it an empty array. 
 
 ```javascript
-appStore.coalesce(obj, [ ["data", "files", "fileOne"], ["data", "files", "fileTwo"]], {name: 'default filename.txt'})
+
+store.set('preferences.cookies', true)
+store.empty('preferences.cookies')
+console.log(store.get('preferences.cookies')) // false
+
+console.log(store.get('users.0.age')) // 300
+store.empty('users.0.age');
+console.log(store.get('users.0.age')) // 0
+
+store.set('openPages', ['https://www.google.com', 'https://www.github.com']);
+store.empty('openPages');
+console.log(store.get('openPages')) // []
+
+store.set('prefs', { cookies: true, javascript: true });
+store.empty('prefs');
+console.log(store.get('prefs')) // {}
+
 ```
 
-### Compatibility:
-During development `ClearX` was tested with React and plain classes. `ClearX` will work with libraries like Preact, Inferno with no extra configuration considering they provide `setState` method and `componentWillUnmount` hook. To use ClearX with other UI libraries, please add a `setState` function on the component to receive the updated data. Also, call `destroy()` method before the UI component is unmounted.
+#### `store.coalesce(paths, defaultValue)`
+
+Returns the first not undefined value from the provided array of paths
+
+```javascript
+const val = store.coalesce(['prop\\.does\\.not\\.exist', 'id']);
+console.log(val); // Brave Browser
+
+// Please note that delimiter (default '.') can be escaped using \\
+const val2 = store.coalesce(['prop\\.does\\.not\\.exist', 'xyz'], 10);
+console.log(val2) // 10. Returns provided default value
+
+```
+
+#### `store.insert(path, value, position)`
+
+`insert` can be used to insert the value in the array at the given path and position. If the array does not exist at the path, this method will create one and adds the value.
+
+```javascript
+store.set('nums', [1, 2, 3]);
+
+store.insert('nums', -1, 0)
+console.log(store.get('nums')) // [-1, 1, 2, 3]
+
+// If position is not provided, insert will act as push
+store.insert('nums', -10)
+console.log(store.get('nums')) // [-1, 1, 2, 3, -10]
+```
+
+#### `store.push(path, value1, value2 ...valueN)`
+
+Push values to the end of the array at the given path. If the array does not exist at the path, this method will create one and push the value.
+
+```javascript
+
+store.push('nums', -1, 0)
+console.log(store.get('nums')) // [-1, 1, 2, 3, -10, -1, 0]
+```
+
+#### `store.unshift(path, value1, value2 ...valueN)`
+
+Insert values to the start of the array at the given path. If the array does not exist at the path, this method will create one and inserts the values.
+
+```javascript
+
+store.unshift('nums', 100)
+console.log(store.get('nums')) // [100, -1, 1, 2, 3, -10, -1, 0]
+```
+
+#### `store.pop(path)`
+
+`pop` is similar to the Array pop method. It removes the value from the end of the array at the given path.
+
+```javascript
+store.pop('nums')
+store.pop('nums')
+console.log(store.get('nums')) // [100, -1, 1, 2, 3, -10]
+```
+
+#### `store.shift(path)`
+
+`store.shift` is similar to the Array shift method. It removes the value from the start of the array at the given path.
+
+```javascript
+store.shift('nums')
+console.log(store.get('nums')) // [-1, 1, 2, 3, -10]
+```
+
+#### `store.splice(path, ...args)`
+Similar to the Array splice method. Applies splice on the array at the given path using provided arguments.
+
+```javascript
+store.splice('nums', 2, 1) // A remove operation
+console.log(store.get('nums')) // [-1, 1, 3, -10]
+
+store.splice('nums', 2, 0, 100) // An insert operation
+console.log(store.get('nums')) // [-1, 1, 100, 3, -10]
+```
+
+#### `store.slice(path, ...args)`
+Similar to the Array slice method. Applies slice on the array at the given path using provided arguments and returns the value
+
+```javascript
+console.log(store.slice('nums', 0, 2)) // [-1, 1]
+```
+
+#### `store.sort(path, ...args)`
+
+Similar to the Array sort method. Applies sort on the array at the given path using provided arguments.
+
+```javascript
+
+store.sort('nums', (a, b) => { return a - b; });
+console.log(store.get('nums')) // [-10, -1, 1, 3, 100]
+
+store.sort('nums', (a, b) => { return b - a; });
+console.log(store.get('nums')) // [100, 3, 1, -1, -10]
+```
+
+#### `store.ensureExists(path, defaultValue)`
+As its name suggests, it creates an entry on the provided path. If the value at the path does not exist, it will set the defaultValue on the path.
+
+```javascript
+console.log(store.get('some.prop')) // undefined
+store.ensureExists('some.prop', 10)
+console.log(store.get('some.prop')) // 10
+```
+
+#### `store.has(path)`
+Checks whether an entry exists or not at the provided path.
+
+```javascript
+store.has('settings') // true
+```
+
+#### `store.delete(path)`
+
+Deletes the entry at the given path
+
+```javascript
+store.delete('some.prop')
+console.log(store.has('some.prop')) // false
+console.log(store.has('some')) // true
+
+store.unshift('nums', 1)
+console.log(store.get('nums')) // [1, 100, 3, 1, -1, -10]
+store.delete('nums.0')
+console.log(store.get('nums')) // [100, 3, 1, -1, -10]
+```
+#### `store.merge(path, data)`
+
+Merge the existing data at the given path with the provided data. It does not cause re-render is existing data, and provided data are the same.
+
+```javascript
+store.merge('settings', { syncBookmarks: true })
+```
+
+#### `store.increment(path, by = 1)`
+
+It increments the value at the given path and by value. If the value at the path does not exist or not a number, it will assign `0` and then does the increment.
+
+```javascript
+store.increment('users.0.age')
+console.log(store.get('users.0.age')) // 301
+store.increment('users.0.age', 100)
+console.log(store.get('users.0.age')) // 401
+```
+
+#### `store.decrement(path, by = 1)`
+
+It decrements the value at the given path and by value. If the value at the path does not exist or not a number, it will assign `0` and then does the decrement.
+
+```javascript
+store.decrement('users.0.age')
+console.log(store.get('users.0.age')) // 400
+store.decrement('users.0.age', 100)
+console.log(store.get('users.0.age')) // 300
+```
+
+#### `store.toggle(path)`
+
+It toggles the boolean value at the given path. If the value at the path does not exist or not a number, it will assign `0` and then does the decrement.
+
+```javascript
+store.toggle('settings.Sync')
+console.log(store.get('settings.Sync')) // true
+store.get('settings.Sync')
+console.log(store.get('settings.Sync')) // false
+```
+
+#### `store.isEqual(path, val)`
+
+Checks if the value at the given path is equal to the provided value.
+
+```javascript
+console.log( store.isEqual('users.0.age', 300) ) // true
+```
 
 ### Contributing:
 

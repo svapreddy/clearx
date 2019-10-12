@@ -5,9 +5,9 @@ import buble from 'rollup-plugin-buble'
 import license from 'rollup-plugin-license'
 import filesize from 'rollup-plugin-filesize'
 import standard from 'rollup-plugin-standard'
-import { uglify } from 'rollup-plugin-uglify'
+import { terser } from "rollup-plugin-terser"
 
-let packageJSON = require('./package.json')
+const packageJSON = require('./package.json')
 
 const config = {
   name: packageJSON.name
@@ -17,8 +17,8 @@ const distFolder = 'dist'
 const bundleName = config.name
 const globalVariableName = 'ClearX'
 
-let defaultConfig = [{
-  input: 'src/index.js',
+const defaultConfig = [{
+  input: 'src/clearx.js',
   plugins: [
     standard(),
     resolve({
@@ -32,18 +32,18 @@ let defaultConfig = [{
       objectAssign: 'Object.assign'
     }),
     license({
-      sourceMap: true,
-      cwd: '.', // Default is process.cwd()
+      sourcemap: true,
+      cwd: '.',
       banner: {
-        file: path.join(__dirname, 'build.inputs/LICENSE.txt'),
-        encoding: 'utf-8', // Default is utf-8
-        // Optional, may be an object or a function returning an object.
+        content: {
+          file: path.join(__dirname, 'build.inputs/LICENSE.txt')
+        },
         data () {
           return config
         }
       }
     }),
-    uglify({
+    terser({
       output: {
         comments: function (node, comment) {
           if (comment.type === 'comment2') {
