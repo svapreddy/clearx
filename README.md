@@ -1,7 +1,7 @@
 <h1 align="center">ClearX</h1>
 <br />
 
-`ClearX` provides an alternative way to maintain application state and provides simple interface to bind state to UI components. It has utilities to set or get deep properties of a nested data using paths.
+`ClearX` provides an alternative way to maintain the application state and provides a simple interface to bind it to UI components. It has utilities to set or get deep properties of nested data using paths.
 
 It works with React class components and Function UI components. UI components re-render automatically when bound data changes.
 
@@ -13,11 +13,11 @@ $ npm install clearx --save
 
 #### Usage:
 
-There are two steps involved in using `ClearX`.
+There are two steps involved in using ClearX.
 
-##### Create a data store:
+##### Create a datastore:
 
-First step in using Clearx is creating a store. `ClearX` uses paths to get and set deep properties of data so it doesn't enforce existence of all properties upfront. Which means, UI components can link to non-existing properties of the store. Initially they might receive undefined value, but they will be made available when the data at those paths is set. Let's take a look at an example:
+The first step in using Clearx is creating a store. `ClearX` uses paths to get and set deep properties of data, so it doesn't enforce the existence of all properties upfront. It means UI components can link to the non-existing properties of the store. Initially, they might receive undefined value, but they will be available to UI components when the data at those paths are updated. Let's take a look at an example:
 
 ```javascript
 
@@ -50,15 +50,15 @@ let store = new Clearx({
 export default store;
 
 ```
-Note that, the data can be a plain Object or a custom model long as it's properties can be accessed or changed using bracket notation  `data[property]`. Latest data is available to UI components whenever data is changed.
+Note that, the data can be a plain Object or a custom model long as it's properties can be accessed or changed using bracket notation  `data[property]`. The latest data is available to UI components whenever bound is changed.
 
 ##### Bind data store to the UI components:
 
-`ClearX` works with class components and function components. It can also be used as independent data observer.
+`ClearX` works with class components and function components. It can also be used as an independent data observer.
 
-Now let's bind the store to a function component. `ClearX` uses `useState()` hook to make latest state available to component. That means, whenever data at a path is updated, if the component is interested in data at that path, the setter of `useState()` is called with latest state. Which internally triggers a re-render. Also note that, if data at particular path is number `3` and store's set method is called to update the value to 3. Because they are equal ClearX does not cause the re-render. Which is same for any type of value. ClearX tries to avoid unnecessary re-renders.
+Now let's bind the store to a function component. `ClearX` uses `useState()` hook to make the latest state available to the component. That means, whenever data at a path is updated, and any component is interested in data at that path, the setter of `useState()` is called with the updated data. Which internally triggers a re-render. Also, note that if data at a particular path is number `3` and the store's set method is called to update the value to 3. Because they are equal, ClearX does not cause the re-render, which is the same for any value. ClearX tries to avoid unnecessary re-renders.
 
-In below example lets try to link some properties to the component
+In the below example, let's try to link some properties to the component.
 
 ```jsx
 
@@ -93,7 +93,7 @@ export default App;
 
 ```
 
-In above example, component is bound to selected paths of the store. Change in any of those paths will trigger a re-render. And unlink method is called when component is unmounted. It will teardown all the data observers.
+In the above example, the component is bound to selected paths of the store. Change in any of those paths will trigger a re-render. And the unlink method is called when the component is unmounted. It will tear down all the data observers. Also, please note that useState() is required to remember the context of the function component. Without that, clearx will not be able to decide whether to reuse the already created data segment for the component or create a new one.
 
 Now let's try to bind the data to a class component.
 
@@ -135,29 +135,30 @@ export default App;
 
 ```
 
-If you notice, unlinking is not required for class components. It is due to the availability of unmount callback. We will learn more about the linking and unlinking in API section.
+If you notice, unlinking is not required for class components. It is due to the availability of unmounting callback. We will learn more about the linking and unlinking in the API section.
 
 <hr />
 
 #### API:
 
-`ClearX` has familiar API. It provides some utilities to operate on the data and provides flexibility to bind data as per your application requirements.
+`ClearX` has a familiar API. It provides some utilities to operate on the data and provides flexibility to bind data as per your application requirements.
 
 ##### new ClearX(Data, Options) (Class)
 
-It's the class used to create store. It's an entry point to use ClearX. It's a repetition but please note that, the data can be a plain Object or a custom model as long as it's properties can are accessible using bracket notation  `data[property]`. Latest data is available to UI components whenever data is changed. The example above pretty much covers how to create a Store using `ClearX`. Here is a basic syntax
+It's the class used to create the store. It's an entry point to use ClearX. It's a repetition, but please note that the data can be a plain Object or a custom model as long as it's properties can are accessible using bracket notation  `data[property]`. Latest data is available to UI components whenever data is changed. The example above pretty much covers how to create a Store using `ClearX`. Here is a basic syntax
 
 ```javascript
 const store = new ClearX(data, {
-  delimiter: '-' // default value '.'
+  // Optional. default value is '.'. In case if you prefer using some other delimiter instead of "." please use this option.
+  delimiter: '-' 
 });
 ```
 
-**Note**: _Below API is available on the instance of the ClearX class. We will be assuming data provided in above example._
+**Note**: _Below API is available on the instance of the ClearX class. We will be assuming the data provided in the above example._
 
 ##### `store.paths(path)`
 
-This is a critical peice of `ClearX`. This method let's you link data from store to a component. When this method is called with paths satisfying the input format required, a new Data segment is created internally. This data segment allows to link to a ui component or observe changes or transform the data before it's supplied to the ui components. The data segment returned can be re-used across components. Until atleast one UI component is attached to a data segment it does not listen for data changes unless we force it to do.
+`paths` is a critical piece of `ClearX`. This method lets you link data from the store to a component. When this method is called with paths satisfying the input format required, a new Data segment is created internally. This data segment allows to link to a UI component or observe changes or transform the data before it's supplied to the UI components. The data segment returned can be reused across components. Until at least one UI component is attached to a data segment, it does not listen for data changes unless we force it to do.
 
 ```javascript
  
@@ -165,7 +166,7 @@ const $identity = store.paths(['id', 'version']); // re-usable data segment
 
 // Params to store.paths can be a path or array of paths or map of paths using aliases
 
-// Link the data to a function component. Inside function component do like this
+// Link the data to a function component. Inside function component do like this.
 
 const [ info, unlink ] = $identity.link( useState() ); // unlink() will remove links to all data segments from this component
 console.log(info) // Notice info is returned in format paths are supplied. i.e ['Brave Browser', 'v0.68.140']
@@ -181,7 +182,10 @@ $identity.sync(false);
 $identity.onUpdate((data) => { console.log('data changed: handler 1'); });
 $identity.onUpdate((data) => { console.log('data changed: handler 2'); });
 
-// Transforming the data before it's supplied to the UI components. These are applied in sequence they are assigned
+/* 
+  It can be used for transforming the data before it's supplied to the UI components. These are applied in the sequence they are assigned.
+  It's optional. But if you have a requirement of transforming the data before supplying to UI component, it would be handy.
+*/
 
 $identity.dataTransformer((data) => {
   return {
@@ -204,7 +208,7 @@ $identity.teardown();
 
 ##### `store.bind(options)`
 
-bind is created to aggregate multiple calls to `paths` function. Let's take a look at below example:
+`bind` is created to aggregate multiple calls to `paths` function. Let's take a look at below example:
 
 ```javascript
 const [info, unlink] = store.bind({
@@ -217,7 +221,7 @@ const [info, unlink] = store.bind({
 
 ##### `store.get(path)`
 
-Returns the value at the provided path or undefined if property at the path does not exist.
+Returns the value at the provided path or undefined if the property at the path does not exist.
 
 ```javascript
 const DevToolsEnabled = store.get('settings.DevTools');
@@ -236,7 +240,8 @@ console.log(User2); // { email: 'doe.john@test.com', name: 'Doe John', age: 50 }
 
 ##### `store.set(path, value, dontReplace)`
 
-Assigns the value at the provided path. If path does not exist, it will create objects required to set value at the path.
+`set` can be used to assign the value at the provided path. If the path does not exist, it will create objects required to set the value on the path.
+`dontReplace` would be handy if you have a requirement of updating a value if there no existing value.
 
 ```javascript
 
@@ -254,7 +259,7 @@ console.log(store.get('version')) // Brave Browser. Because dontReplace make it 
 
 ##### `store.empty(path)`
 
-Clears the value at the provided path. It is type aware. That means, if you call empty on an array it will make it empty array. 
+`empty` clears the value at the provided path. It is type aware. That means, if you call empty on an array, it will make it an empty array. 
 
 ```javascript
 
@@ -292,7 +297,7 @@ console.log(val2) // 10. Returns provided default value
 
 #### `store.insert(path, value, position)`
 
-Inserts the value in the array at the given path and position. If the array does not exists at path, this method will create one and inserts the value.
+`insert` can be used to insert the value in the array at the given path and position. If the array does not exist at the path, this method will create one and adds the value.
 
 ```javascript
 store.set('nums', [1, 2, 3]);
@@ -307,7 +312,7 @@ console.log(store.get('nums')) // [-1, 1, 2, 3, -10]
 
 #### `store.push(path, value1, value2 ...valueN)`
 
-Push values to the end of the array at the given path. If the array does not exists at path, this method will create one and push the value.
+Push values to the end of the array at the given path. If the array does not exist at the path, this method will create one and push the value.
 
 ```javascript
 
@@ -317,7 +322,7 @@ console.log(store.get('nums')) // [-1, 1, 2, 3, -10, -1, 0]
 
 #### `store.unshift(path, value1, value2 ...valueN)`
 
-Inserts values to the start of the array at the given path. If the array does not exists at path, this method will create one and inserts the values.
+Insert values to the start of the array at the given path. If the array does not exist at the path, this method will create one and inserts the values.
 
 ```javascript
 
@@ -327,7 +332,7 @@ console.log(store.get('nums')) // [100, -1, 1, 2, 3, -10, -1, 0]
 
 #### `store.pop(path)`
 
-Removes the value from the end of the array at the given path.
+`pop` is similar to the Array pop method. It removes the value from the end of the array at the given path.
 
 ```javascript
 store.pop('nums')
@@ -337,7 +342,7 @@ console.log(store.get('nums')) // [100, -1, 1, 2, 3, -10]
 
 #### `store.shift(path)`
 
-Removes the value from the start of the array at the given path.
+`store.shift` is similar to the Array shift method. It removes the value from the start of the array at the given path.
 
 ```javascript
 store.shift('nums')
@@ -345,7 +350,7 @@ console.log(store.get('nums')) // [-1, 1, 2, 3, -10]
 ```
 
 #### `store.splice(path, ...args)`
-Similar to Array splice method. Applies splice on array at the given path using provided arguments.
+Similar to the Array splice method. Applies splice on the array at the given path using provided arguments.
 
 ```javascript
 store.splice('nums', 2, 1) // A remove operation
@@ -356,7 +361,7 @@ console.log(store.get('nums')) // [-1, 1, 100, 3, -10]
 ```
 
 #### `store.slice(path, ...args)`
-Similar to Array slice method. Applies slice on array at the given path using provided arguments and returns the value
+Similar to the Array slice method. Applies slice on the array at the given path using provided arguments and returns the value
 
 ```javascript
 console.log(store.slice('nums', 0, 2)) // [-1, 1]
@@ -364,7 +369,7 @@ console.log(store.slice('nums', 0, 2)) // [-1, 1]
 
 #### `store.sort(path, ...args)`
 
-Similar to Array sort method. Applies sort on array at the given path using provided arguments.
+Similar to the Array sort method. Applies sort on the array at the given path using provided arguments.
 
 ```javascript
 
@@ -376,7 +381,7 @@ console.log(store.get('nums')) // [100, 3, 1, -1, -10]
 ```
 
 #### `store.ensureExists(path, defaultValue)`
-Creates an entry at the provided path. If value at the path does not exist, it will set the defaultValue at the path
+As its name suggests, it creates an entry on the provided path. If the value at the path does not exist, it will set the defaultValue on the path.
 
 ```javascript
 console.log(store.get('some.prop')) // undefined
@@ -407,7 +412,7 @@ console.log(store.get('nums')) // [100, 3, 1, -1, -10]
 ```
 #### `store.merge(path, data)`
 
-Merge the existing data at the given path with provided data. Does not cause re-render is existing data and provided data are same.
+Merge the existing data at the given path with the provided data. It does not cause re-render is existing data, and provided data are the same.
 
 ```javascript
 store.merge('settings', { syncBookmarks: true })
@@ -415,7 +420,7 @@ store.merge('settings', { syncBookmarks: true })
 
 #### `store.increment(path, by = 1)`
 
-Increments the value at the given path and by value. If value at the path does not exist or not a number, it will assign `0` and then does the increment.
+It increments the value at the given path and by value. If the value at the path does not exist or not a number, it will assign `0` and then does the increment.
 
 ```javascript
 store.increment('users.0.age')
@@ -426,7 +431,7 @@ console.log(store.get('users.0.age')) // 401
 
 #### `store.decrement(path, by = 1)`
 
-Decrements the value at the given path and by value. If value at the path does not exist or not a number, it will assign `0` and then does the decrement.
+It decrements the value at the given path and by value. If the value at the path does not exist or not a number, it will assign `0` and then does the decrement.
 
 ```javascript
 store.decrement('users.0.age')
@@ -437,7 +442,7 @@ console.log(store.get('users.0.age')) // 300
 
 #### `store.toggle(path)`
 
-Toggles the boolean value at the given path. If value at the path does not exist or not a number, it will assign `0` and then does the decrement.
+It toggles the boolean value at the given path. If the value at the path does not exist or not a number, it will assign `0` and then does the decrement.
 
 ```javascript
 store.toggle('settings.Sync')
