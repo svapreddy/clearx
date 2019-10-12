@@ -139,7 +139,6 @@ class SegmentHelper {
     if (initialAssignment) return true
     component[0] = this._data
     setState(this._data)
-    console.log(this._data)
     return true
   }
 
