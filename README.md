@@ -11,6 +11,9 @@ It works with React class components and Function UI components. UI components r
 $ npm install clearx --save
 ```
 
+#### Version 1.x
+For version 1.x please checkout [1.x Documentation](./README.1.x.md)
+
 #### Usage:
 
 There are two steps involved in using ClearX.
