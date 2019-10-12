@@ -1,7 +1,7 @@
 <h1 align="center">ClearX</h1>
 <br />
 
-`ClearX` provides an alternative way to maintain the application state and provides a simple interface to bind it to UI components. It has utilities to set or get deep properties of nested data using paths.
+`ClearX` is an alternative way to Redux and MobX to maintain the application state and provides a simple interface to bind it to UI components. It has utilities to set or get deep properties of nested data using paths.
 
 It works with React class components and Function UI components. UI components re-render automatically when bound data changes.
 
