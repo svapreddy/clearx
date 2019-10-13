@@ -5,7 +5,7 @@ import buble from 'rollup-plugin-buble'
 import license from 'rollup-plugin-license'
 import filesize from 'rollup-plugin-filesize'
 import standard from 'rollup-plugin-standard'
-import { terser } from "rollup-plugin-terser"
+import { terser } from 'rollup-plugin-terser'
 
 const packageJSON = require('./package.json')
 

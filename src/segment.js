@@ -62,7 +62,7 @@ class Segment {
     if (!helper) return {}
     const store = this.store
     const unlink = store._unlinkComponentFromAllSegments.bind(store, component)
-    const result = [ this.data, unlink ]
+    const result = [this.data, unlink]
     if (this.findComponent(component) > -1) return result
     helper.components.push(component)
     helper.observe(this.keepSyncing)
@@ -73,9 +73,9 @@ class Segment {
   }
 
   unlink (component) {
-    if (!component) return
+    if (!component) return false
     const helper = this._helper
-    if (!helper) return
+    if (!helper) return false
     const idx = this.findComponent(component)
     if (idx > -1) {
       helper.removeMark(component)
@@ -85,6 +85,7 @@ class Segment {
     if ((helper.components.length === 0) && !this.keepSyncing) {
       helper.unobserve()
     }
+    return idx > -1
   }
 
   sync (on = true) {
@@ -100,18 +101,19 @@ class Segment {
   }
 
   unlinkAll () {
-    if (!this._helper) return
+    if (!this._helper) return false
     this._helper.components.forEach(this.unlink.bind(this))
+    return true
   }
 
   onUpdate (func) {
-    if (!this._helper) return
-    this._helper.onUpdate(func)
+    if (!this._helper) return () => {}
+    return this._helper.onUpdate(func)
   }
 
   dataTransformer (func) {
-    if (!this._helper) return
-    this._helper.dataTransformer(func)
+    if (!this._helper) return () => {}
+    return this._helper.dataTransformer(func)
   }
 
   teardown () {

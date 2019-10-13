@@ -69,7 +69,12 @@ class SegmentHelper {
     if (typeof func === 'function') {
       this._dataTransformers.push(func)
       this.updateComponents()
+      return () => {
+        const idx = this._dataTransformers.indexOf(func)
+        (idx > -1) && this._dataTransformers.splice(idx, 1)
+      }
     }
+    return () => {}
   }
 
   get dataTransformers () {
@@ -146,10 +151,18 @@ class SegmentHelper {
     if (typeof component.setState !== 'function') return
     if (initialAssignment) {
       component.state = component.state || {}
-      component.state.store = this.data
+      component.state.store = component.state.store || {}
+      component.state.store = {
+        ...component.state.store,
+        ...this.data
+      }
     } else {
       component.setState({
-        store: this.data
+        ...component.state,
+        store: {
+          ...component.state.store,
+          ...this.data
+        }
       })
     }
     return true
@@ -172,7 +185,12 @@ class SegmentHelper {
   onUpdate (func) {
     if (typeof func === 'function') {
       this._afterUpdateEvents.push(func)
+      return () => {
+        const idx = this._afterUpdateEvents.indexOf(func)
+        (idx > -1) && this._afterUpdateEvents.splice(idx, 1)
+      }
     }
+    return () => {}
   }
 
   get afterUpdateEvents () {

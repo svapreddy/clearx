@@ -1,9 +1,10 @@
 {
   "name": "clearx",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Fast & Effortless global state management for React, Preact and Inferno",
   "main": "src/index.js",
   "browser": "dist/clearx.js",
+  "typings": "src/typings.d.ts",
   "scripts": {
     "test": "jest --runInBand --coverage",
     "build": "./node_modules/.bin/rollup -c",

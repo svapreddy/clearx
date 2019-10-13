@@ -3,11 +3,11 @@ import DataObserver from './data-observer'
 import { sort, get, set, coalesce, empty, insert, push, pop, shift, splice, unshift, ensureExists, del, has, merge, increment, decrement, toggle, isEqual, slice } from './object-utils'
 
 class Clearx {
-  constructor (data, { delimiter = '.' } = {}) {
+  constructor (data) {
     this.data = data
     this.segments = []
     this.dataObserver = new DataObserver(this)
-    this.delimiter = delimiter
+    this.delimiter = '.'
     this.onUpdateEvents = []
   }
 
@@ -15,7 +15,7 @@ class Clearx {
     this.dataObserver.dataUpdatedAt(key)
   }
 
-  executeUtil (key, [status, changed]) {
+  executeUtil (key, [status, changed, value]) {
     if (changed) {
       this.triggerEvents(key)
     }
@@ -103,14 +103,14 @@ class Clearx {
     return isEqual(this.data, key, value)
   }
 
-  paths (keys, id, delimiter) {
-    const segment = new Segment(keys, id, delimiter || this.delimiter, this, this.dataObserver)
+  paths (keys, id) {
+    const segment = new Segment(keys, id, this.delimiter, this, this.dataObserver)
     this.segments.push(segment)
     return segment
   }
 
   bind (options = {}) {
-    const { to, afterUpdate, id, delimiter, paths } = options
+    const { to, afterUpdate, id, paths, dataTransformer } = options
     let component = to
     if (Array.isArray(component)) {
       component = to[1]
@@ -120,8 +120,9 @@ class Clearx {
     if (segment) {
       return segment.link(to)
     }
-    segment = this.paths(paths, id, delimiter)
+    segment = this.paths(paths, id, this.delimiter)
     segment.onUpdate(afterUpdate)
+    segment.dataTransformer(dataTransformer)
     const link = segment.link(to)
 
     if (Array.isArray(to)) {
@@ -135,13 +136,20 @@ class Clearx {
     if (index > -1) {
       segment.teardown()
       this.segments.splice(index, 1)
+      return true
     }
+    return false
   }
 
   onUpdate (func) {
     if (typeof func === 'function') {
       this.onUpdateEvents.push(func)
+      return () => {
+        const idx = this.onUpdateEvents.indexOf(func)
+        (idx > -1) && this.onUpdateEvents.splice(idx, 1)
+      }
     }
+    return () => {}
   }
 
   executeOnUpdateEvents (changed, changedKeys) {
@@ -167,6 +175,7 @@ class Clearx {
     this.dataObserver.teardown()
     delete this.dataObserver
     this.data = {}
+    return true
   }
 }
 export default Clearx

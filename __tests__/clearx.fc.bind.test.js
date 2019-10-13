@@ -23,12 +23,11 @@ describe('Function Component using bind', () => {
   })
 
   describe('Component receives the data from store', () => {
-    
     describe('internals', () => {
       it('should not observe data changes', () => {
         expect(segment.active).toBe(true)
       })
-      
+
       it('component is stored', () => {
         expect(Array.isArray(component)).toBe(true)
         expect(component[1].__segment).toBe(segment)
@@ -85,7 +84,6 @@ describe('Function Component using bind', () => {
         })
         expect(segment.active).toBe(false)
       })
-
     })
 
     describe('#get', () => {
@@ -126,14 +124,14 @@ describe('Function Component using bind', () => {
     })
 
     describe('#has', () => {
-      it ('profile.age should not exist', () => {
+      it('profile.age should not exist', () => {
         expect(store.has('profile.age')).toBe(false)
         expect(rendered.getByTestId('age').textContent).toBe('')
       })
     })
 
     describe('#ensureExists', () => {
-      it ('profile.age should be created with value null', () => {
+      it('profile.age should be created with value null', () => {
         act(() => {
           store.ensureExists('profile.age')
         })
@@ -141,7 +139,7 @@ describe('Function Component using bind', () => {
       })
 
       describe('#has', () => {
-        it ('profile.age should exist', () => {
+        it('profile.age should exist', () => {
           expect(store.has('profile.age')).toBe(true)
           expect(rendered.getByTestId('age').textContent).toBe('')
         })
@@ -149,12 +147,12 @@ describe('Function Component using bind', () => {
 
       describe('#coalesce', () => {
         it('still return `test`', () => {
-          expect(store.coalesce(['profile.age', 'profile.name'])).toBe("test")
+          expect(store.coalesce(['profile.age', 'profile.name'])).toBe('test')
         })
       })
 
       describe('#set', () => {
-        it ('profile.age should be set to 30', () => {
+        it('profile.age should be set to 30', () => {
           act(() => {
             store.set('profile.age', 30)
           })
@@ -171,7 +169,7 @@ describe('Function Component using bind', () => {
 
     describe('#empty', () => {
       it('profile.lastName should become empty "" on empty', () => {
-        const temp = "last name"
+        const temp = 'last name'
         act(() => {
           store.set('profile.lastName', temp)
         })
@@ -181,13 +179,13 @@ describe('Function Component using bind', () => {
         })
         expect(rendered.getByTestId('last-name').textContent).toBe('')
       })
-      it ('profile.age should be 0 on empty', () => {
+      it('profile.age should be 0 on empty', () => {
         act(() => {
           store.empty('profile.age')
         })
         expect(rendered.getByTestId('age').textContent).toBe('0')
       })
-      it ('profile.active should be false on empty', () => {
+      it('profile.active should be false on empty', () => {
         act(() => {
           store.empty('profile.active')
         })
@@ -201,7 +199,7 @@ describe('Function Component using bind', () => {
         expect(rendered.getByTestId('test-arr').textContent).toBe('')
       })
       it('profile.testObject should become empty {} on empty', () => {
-        const temp = { a: 1}
+        const temp = { a: 1 }
         act(() => {
           store.set('profile.testObj', temp)
         })
@@ -271,7 +269,7 @@ describe('Function Component using bind', () => {
     })
 
     describe('#insert', () => {
-      it ('should insert value at position', () => {
+      it('should insert value at position', () => {
         expect(rendered.getByTestId('numbers').textContent).toBe('1 2 3')
         act(() => {
           store.insert('nums', -1, 0)
@@ -287,7 +285,7 @@ describe('Function Component using bind', () => {
     })
 
     describe('#push', () => {
-      it ('should insert value at the end', () => {
+      it('should insert value at the end', () => {
         act(() => {
           store.push('nums', 100)
         })
@@ -296,7 +294,7 @@ describe('Function Component using bind', () => {
     })
 
     describe('#unshift', () => {
-      it ('should insert value at the start', () => {
+      it('should insert value at the start', () => {
         act(() => {
           store.unshift('nums', 100)
         })
@@ -305,7 +303,7 @@ describe('Function Component using bind', () => {
     })
 
     describe('#pop', () => {
-      it ('should remove value at the end', () => {
+      it('should remove value at the end', () => {
         act(() => {
           store.pop('nums')
         })
@@ -314,7 +312,7 @@ describe('Function Component using bind', () => {
     })
 
     describe('#shift', () => {
-      it ('should remove value at the start', () => {
+      it('should remove value at the start', () => {
         act(() => {
           store.shift('nums')
         })
@@ -338,7 +336,6 @@ describe('Function Component using bind', () => {
     })
 
     describe('#sort', () => {
-      
       it('should sort', () => {
         act(() => {
           store.set('names', ['def', 'abc'])
