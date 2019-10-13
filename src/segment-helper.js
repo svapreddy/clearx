@@ -71,7 +71,7 @@ class SegmentHelper {
       this.updateComponents()
       return () => {
         const idx = this._dataTransformers.indexOf(func)
-        (idx > -1) && this._dataTransformers.splice(idx, 1)
+        if (idx > -1) this._dataTransformers.splice(idx, 1)
       }
     }
     return () => {}
@@ -187,7 +187,7 @@ class SegmentHelper {
       this._afterUpdateEvents.push(func)
       return () => {
         const idx = this._afterUpdateEvents.indexOf(func)
-        (idx > -1) && this._afterUpdateEvents.splice(idx, 1)
+        if (idx > -1) this._afterUpdateEvents.splice(idx, 1)
       }
     }
     return () => {}

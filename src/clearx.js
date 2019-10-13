@@ -146,7 +146,7 @@ class Clearx {
       this.onUpdateEvents.push(func)
       return () => {
         const idx = this.onUpdateEvents.indexOf(func)
-        (idx > -1) && this.onUpdateEvents.splice(idx, 1)
+        if (idx > -1) this.onUpdateEvents.splice(idx, 1)
       }
     }
     return () => {}
