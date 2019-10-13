@@ -1,6 +1,6 @@
 {
   "name": "clearx",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Fast & Effortless global state management for React, Preact and Inferno",
   "main": "src/index.js",
   "browser": "dist/clearx.js",
@@ -54,7 +54,8 @@
     "rollup-plugin-replace": "^2.1.0",
     "rollup-plugin-serve": "^1.0.0",
     "rollup-plugin-standard": "^1.0.0",
-    "rollup-plugin-terser": "^5.1.2"
+    "rollup-plugin-terser": "^5.1.2",
+    "type-fest": "^0.8.1"
   },
   "dependencies": {
     "deepmerge": "^3.1.0",
