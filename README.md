@@ -102,10 +102,10 @@ Now let's try to bind the data to a class component.
 
 ```jsx
 
-import React, { Fragment } from 'react';
+import React, { Fragment, Component } from 'react';
 import store from './store';
 
-class App {
+class App extends Component {
   constructor (props) {
     super(props)
     
