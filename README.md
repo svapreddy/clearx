@@ -105,7 +105,7 @@ Now let's try to bind the data to a class component.
 import React, { Fragment } from 'react';
 import store from './store';
 
-class App {
+class App extends React.Component {
   constructor (props) {
     super(props)
     
