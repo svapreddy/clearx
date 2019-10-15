@@ -448,9 +448,8 @@ console.log(store.get('users.0.age')) // 300
 It toggles the boolean value at the given path. If the value at the path does not exist or not a number, it will assign `0` and then does the decrement.
 
 ```javascript
-store.toggle('settings.Sync')
 console.log(store.get('settings.Sync')) // true
-store.get('settings.Sync')
+store.toggle('settings.Sync')
 console.log(store.get('settings.Sync')) // false
 ```
 
