@@ -26,7 +26,7 @@ The first step in using Clearx is creating a store. `ClearX` uses paths to get a
 
 import ClearX from `clearx`;
 
-let store = new Clearx({
+let store = new ClearX({
   id: 'Brave Browser',
   version: 'v0.68.140',
   settings: {
