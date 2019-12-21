@@ -1,9 +1,9 @@
-import nanoid from 'nanoid'
+import identifier from './id'
 import SegmentHelper from './segment-helper'
 
 class Segment {
   constructor (paths, id, delimiter, store, dataObserver) {
-    this.id = id || nanoid()
+    this.id = id || identifier()
     this.paths = paths
 
     this._helper = new SegmentHelper(paths, delimiter, store, dataObserver)
