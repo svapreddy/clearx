@@ -2,7 +2,7 @@ import Segment from './segment'
 import DataObserver from './data-observer'
 import { sort, get, set, coalesce, empty, insert, push, pop, shift, splice, unshift, ensureExists, del, has, merge, increment, decrement, toggle, isEqual, slice } from './object-utils'
 
-class Clearx {
+export class ClearX {
   constructor (data) {
     this.data = data
     this.segments = []
@@ -178,4 +178,4 @@ class Clearx {
     return true
   }
 }
-export default Clearx
+

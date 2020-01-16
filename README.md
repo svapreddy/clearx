@@ -1,3 +1,7 @@
+This fork was made because the package was not working for me in my rollup build. I think it was related to default export, and module resolution issues. So until I can make the official ClearX work, I can use this to import it. All the rest of the code besides the build code remains the same as original.
+
+<hr />
+
 <h1 align="center">ClearX</h1>
 <br />
 
@@ -108,7 +112,7 @@ import store from './store';
 class App extends Component {
   constructor (props) {
     super(props)
-    
+
     store.paths({
       Id: 'id'
       Version: 'version'
@@ -117,7 +121,7 @@ class App extends Component {
       DevToolsEnabled: 'settings.DevTools'
       HistoryEnabled: 'settings.History'
     }).link(this)
-    
+
   }
   render () {
     const { Id, Version, openTabs, UsersCount, DevToolsEnabled, HistoryEnabled } = this.state.store
@@ -153,7 +157,7 @@ It's the class used to create the store. It's an entry point to use ClearX. It's
 ```javascript
 const store = new ClearX(data, {
   // Optional. default value is '.'. In case if you prefer using some other delimiter instead of "." please use this option.
-  delimiter: '-' 
+  delimiter: '-'
 });
 ```
 
@@ -164,7 +168,7 @@ const store = new ClearX(data, {
 `paths` is a critical piece of `ClearX`. This method lets you link data from the store to a component. When this method is called with paths satisfying the input format required, a new Data segment is created internally. This data segment allows to link to a UI component or observe changes or transform the data before it's supplied to the UI components. The data segment returned can be reused across components. Until at least one UI component is attached to a data segment, it does not listen for data changes unless we force it to do.
 
 ```javascript
- 
+
 const $identity = store.paths(['id', 'version']); // re-usable data segment
 
 // Params to store.paths can be a path or array of paths or map of paths using aliases
@@ -177,7 +181,7 @@ console.log(info) // Notice info is returned in format paths are supplied. i.e [
 // Let's force it to observe data changes if you intend to use it for just observing data
 $identity.sync(true);
 
-// To turn off: 
+// To turn off:
 $identity.sync(false);
 
 // Listening for data changes
@@ -185,7 +189,7 @@ $identity.sync(false);
 $identity.onUpdate((data) => { console.log('data changed: handler 1'); });
 $identity.onUpdate((data) => { console.log('data changed: handler 2'); });
 
-/* 
+/*
   It can be used for transforming the data before it's supplied to the UI components. These are applied in the sequence they are assigned.
   It's optional. But if you have a requirement of transforming the data before supplying to UI component, it would be handy.
 */
@@ -206,7 +210,7 @@ $identity.dataTransformer((data) => {
 
 // Finally teardown.
 $identity.teardown();
-  
+
 ```
 
 ##### `store.bind(options)`
@@ -262,7 +266,7 @@ console.log(store.get('version')) // Brave Browser. Because dontReplace make it 
 
 ##### `store.empty(path)`
 
-`empty` clears the value at the provided path. It is type aware. That means, if you call empty on an array, it will make it an empty array. 
+`empty` clears the value at the provided path. It is type aware. That means, if you call empty on an array, it will make it an empty array.
 
 ```javascript
 
