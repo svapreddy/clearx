@@ -1,70 +1,31 @@
 {
   "name": "clearx",
   "version": "2.0.8",
-  "description": "Fast & Effortless global state management for React, Preact and Inferno",
-  "main": "src/index.js",
-  "browser": "dist/clearx.js",
-  "typings": "src/typings.d.ts",
-  "scripts": {
-    "test": "jest --runInBand --coverage",
-    "build": "./node_modules/.bin/rollup -c",
-    "lint:fix": "./node_modules/.bin/standard ./src --fix",
-    "todo": "./node_modules/.bin/rollup -c todo-app/rollup.todo-app.config.js -w"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Autodesk/clearx"
-  },
-  "keywords": [
-    "react",
-    "preact",
-    "inferno",
-    "es6",
-    "store",
-    "state",
-    "global store",
-    "root store",
-    "global state",
-    "root state",
-    "scalable state",
-    "predictable",
-    "slice"
-  ],
   "author": "Autodesk Inc.",
   "license": "Apache-2.0",
-  "devDependencies": {
-    "@babel/core": "^7.6.2",
-    "@babel/preset-env": "^7.6.2",
-    "@babel/preset-react": "^7.0.0",
-    "@testing-library/react": "^9.3.0",
-    "babel-jest": "^24.9.0",
-    "buble": "^0.19.6",
-    "jest": "^24.9.0",
-    "package.json": "^2.0.1",
-    "react": "^16.10.1",
-    "react-dom": "^16.10.1",
-    "rollup": "^1.1.0",
-    "rollup-jest": "0.0.2",
-    "rollup-plugin-buble": "^0.19.6",
-    "rollup-plugin-commonjs": "^9.2.0",
-    "rollup-plugin-css-only": "^1.0.0",
-    "rollup-plugin-filesize": "^6.0.0",
-    "rollup-plugin-license": "^0.12.1",
-    "rollup-plugin-node-resolve": "^4.0.0",
-    "rollup-plugin-replace": "^2.1.0",
-    "rollup-plugin-serve": "^1.0.0",
-    "rollup-plugin-standard": "^1.0.0",
-    "rollup-plugin-terser": "^5.1.2"
-  },
+  "description": "Fast & Effortless global state management for React, Preact and Inferno",
+  "main": "dist/clearx.cjs.js",
+  "module": "dist/clearx.esm.js",
+  "browser": "dist/clearx.umd.js",
+  "typings": "src/typings.d.ts",
   "dependencies": {
     "@types/react": "^16.9.5",
     "deepmerge": "^3.1.0",
     "fast-deep-equal": "^2.0.1",
     "type-fest": "^0.8.1"
   },
-  "standard": {
-    "ignore": [
-      "/dist/**"
-    ]
-  }
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^11.0.1",
+    "@rollup/plugin-node-resolve": "^7.0.0",
+    "rollup": "^1.29.0"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "node test/test.js",
+    "pretest": "npm run build"
+  },
+  "files": [
+    "dist"
+  ]
 }
