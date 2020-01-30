@@ -1334,16 +1334,71 @@
 	  this.listeners = {};
 	};
 
-	var Clearx = function Clearx (data) {
+	var DevtoolsManager = function DevtoolsManager (ref) {
+	  if ( ref === void 0 ) ref = {};
+	  var devtoolsOptions = ref.devtoolsOptions;
+	  var name = ref.name;
+
+	  if (!name && !(document && document.title)) {
+	    name = 'ClearX';
+	  }
+
+	  if (typeof window !== 'undefined') {
+	    var reduxLib = (window).__REDUX_DEVTOOLS_EXTENSION__;
+	    if (reduxLib) {
+	      this._initReduxDevtools(reduxLib, devtoolsOptions, name);
+	    }
+	  }
+	};
+
+	DevtoolsManager.prototype._initReduxDevtools = function _initReduxDevtools (reduxLib, devtoolsOptions, name) {
+	  var options =
+	    (typeof devtoolsOptions === 'object') ? devtoolsOptions : undefined;
+
+	  this.reduxDevtools = reduxLib.connect(Object.assign({}, {name: name,
+	    autoPause: true},
+	    options,
+	    {stateSanitizer: function (state) { return state; },
+	    features: Object.assign({}, {jump: false,
+	      skip: false},
+	      (options ? options.features : undefined))}));
+
+	  this.reduxDevtools.init(undefined);
+	};
+
+	DevtoolsManager.prototype.update = function update (ref) {
+	    var event = ref.event;
+	    var state = ref.state;
+
+	  if (this.reduxDevtools) {
+	    this.reduxDevtools.send(event, state);
+	  }
+	};
+
+	var Clearx = function Clearx (data, options) {
 	  this.data = data;
 	  this.segments = [];
 	  this.dataObserver = new DataObserver(this);
 	  this.delimiter = '.';
 	  this.onUpdateEvents = [];
+
+	  if (options) {
+	    if (options.devtools === true) {
+	      this.devtools = new DevtoolsManager();
+	    }
+	  }
 	};
 
 	Clearx.prototype.triggerEvents = function triggerEvents (key) {
 	  this.dataObserver.dataUpdatedAt(key);
+	};
+
+	Clearx.prototype.updateDevTools = function updateDevTools (key, value) {
+	  var path = key.join('/');
+	  this.devtools.update({
+	    event: path,
+	    state: this.data
+	  });
 	};
 
 	Clearx.prototype.executeUtil = function executeUtil (key, ref) {
@@ -1353,8 +1408,13 @@
 
 	  if (changed) {
 	    this.triggerEvents(key);
+
+	    if (this.devtools) {
+	      this.updateDevTools(key, value);
+	    }
 	  }
 	  this.executeOnUpdateEvents(changed, key);
+
 	  return status
 	};
 
@@ -1544,7 +1604,7 @@
 	  todos: []
 	};
 
-	var Store = new Clearx(Data);
+	var Store = new Clearx(Data, { devtools: true });
 
 	var getTodo = function (id) {
 	  var todos = Store.get(['todos']);
@@ -1563,7 +1623,7 @@
 
 	var deleteTodo = function (id) {
 	  var todoInfo = getTodo(id);
-	  Store.del(['todos', todoInfo.index]);
+	  Store.delete(['todos', todoInfo.index]);
 	};
 
 	var toggleTodo = function (id) {
@@ -1725,7 +1785,7 @@
 	        react.createElement( 'h5', null, "The todo data accessed and displayed here from local sliced store." ),
 	        react.createElement( 'div', { class: 'todoCount' }, " Todo count: ", localStore.todos.length, " "),
 	        react.createElement( 'code', null,
-	          JSON.stringify(localStore.todos)
+	          JSON.stringify(localStore)
 	        )
 	      )
 	    )

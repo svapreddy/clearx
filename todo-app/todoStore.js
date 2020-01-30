@@ -4,6 +4,6 @@ let Data = {
   todos: []
 }
 
-let Store = new ClearX(Data)
+let Store = new ClearX(Data, { devtools: true })
 
 export default Store

@@ -1,25 +1,45 @@
 import Segment from './segment'
 import DataObserver from './data-observer'
+import DevtoolsManager from './devtools-manager';
 import { sort, get, set, coalesce, empty, insert, push, pop, shift, splice, unshift, ensureExists, del, has, merge, increment, decrement, toggle, isEqual, slice } from './object-utils'
 
 class Clearx {
-  constructor (data) {
+  constructor (data, options) {
     this.data = data
     this.segments = []
     this.dataObserver = new DataObserver(this)
     this.delimiter = '.'
     this.onUpdateEvents = []
+
+    if (options) {
+      if (options.devtools === true) {
+        this.devtools = new DevtoolsManager()
+      }
+    }
   }
 
   triggerEvents (key) {
     this.dataObserver.dataUpdatedAt(key)
   }
 
+  updateDevTools (key, value) {
+    const path = key.join('/')
+    this.devtools.update({
+      event: path,
+      state: this.data
+    })
+  }
+
   executeUtil (key, [status, changed, value]) {
     if (changed) {
       this.triggerEvents(key)
+
+      if (this.devtools) {
+        this.updateDevTools(key, value)
+      }
     }
     this.executeOnUpdateEvents(changed, key)
+
     return status
   }
 

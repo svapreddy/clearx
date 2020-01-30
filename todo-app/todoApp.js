@@ -31,7 +31,7 @@ class TodoApp extends React.Component {
         <h5>The todo data accessed and displayed here from local sliced store.</h5>
         <div class='todoCount'> Todo count: { localStore.todos.length } </div>
         <code>
-          { JSON.stringify(localStore.todos) }
+          { JSON.stringify(localStore) }
         </code>
       </React.Fragment>
     )
