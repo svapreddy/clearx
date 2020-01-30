@@ -1,6 +1,6 @@
 /** @license
  * Autodesk clearx
- * Date: 2019-12-21
+ * Date: 2020-01-30
  * License: Apache-2.0
  *
  * Bundled dependencies (npm packages): 
