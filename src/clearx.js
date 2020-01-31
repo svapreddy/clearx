@@ -1,6 +1,6 @@
 import Segment from './segment'
 import DataObserver from './data-observer'
-import DevtoolsManager from './devtools-manager';
+import DevtoolsManager from './devtools-manager'
 import { sort, get, set, coalesce, empty, insert, push, pop, shift, splice, unshift, ensureExists, del, has, merge, increment, decrement, toggle, isEqual, slice } from './object-utils'
 
 class Clearx {
