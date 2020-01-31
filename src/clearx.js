@@ -13,7 +13,7 @@ class Clearx {
 
     if (options) {
       if (options.devtools === true) {
-        this.devtools = new DevtoolsManager()
+        this.devtools = new DevtoolsManager(options)
       }
     }
   }

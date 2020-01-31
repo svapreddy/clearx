@@ -1384,7 +1384,7 @@
 
 	  if (options) {
 	    if (options.devtools === true) {
-	      this.devtools = new DevtoolsManager();
+	      this.devtools = new DevtoolsManager(options);
 	    }
 	  }
 	};
@@ -1604,7 +1604,13 @@
 	  todos: []
 	};
 
-	var Store = new Clearx(Data, { devtools: true });
+	var Store = new Clearx(
+	  Data, 
+	  { 
+	    devtools: true,
+	    name: 'Todo Example App' 
+	  }
+	);
 
 	var getTodo = function (id) {
 	  var todos = Store.get(['todos']);

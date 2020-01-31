@@ -153,7 +153,13 @@ It's the class used to create the store. It's an entry point to use ClearX. It's
 ```javascript
 const store = new ClearX(data, {
   // Optional. default value is '.'. In case if you prefer using some other delimiter instead of "." please use this option.
-  delimiter: '-' 
+  delimiter: '-',
+  // enable redux devtools logging
+  devtools: true, 
+  // set redux devtools instance name.
+  // defaults to document.title, or if document.title
+  // is not defined: 'ClearX'
+  name: 'Devtools ClearX Store Name' 
 });
 ```
 
