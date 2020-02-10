@@ -65,7 +65,7 @@ In the below example, let's try to link some properties to the component.
 
 ```jsx
 
-import React, { Fragment } from 'react';
+import React, { Fragment, useState } from 'react';
 import store from './store';
 
 const App = () => {
