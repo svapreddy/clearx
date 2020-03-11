@@ -51,7 +51,7 @@ declare module 'clearx' {
         teardown(): boolean
     }
 
-    class ClearX {
+    export default class ClearX {
         constructor (data: JsonObject)
         get(key: path, defaultValue?: any): any
         set(key: path, value: any, doNotReplace?: boolean): boolean
@@ -81,6 +81,4 @@ declare module 'clearx' {
         teardown(): boolean
     }
 
-    export default ClearX
-    
 }
