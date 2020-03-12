@@ -1,6 +1,6 @@
 {
   "name": "clearx",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Fast & Effortless global state management for React, Preact and Inferno",
   "main": "src/index.js",
   "browser": "dist/clearx.js",
