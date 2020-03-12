@@ -23,9 +23,8 @@ class Clearx {
   }
 
   updateDevTools (key, value) {
-    const path = key.join('/')
     this.devtools.update({
-      event: path,
+      event: Array.isArray(key) ? key.join('.') : key,
       state: this.data
     })
   }

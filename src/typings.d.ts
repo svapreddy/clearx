@@ -18,6 +18,12 @@ declare module 'clearx' {
     type unlink = Function
     type fcReturnValue = [any, unlink]
 
+    type initOptions = {
+        delimiter?: string,
+        devtools?: boolean,
+        name?: string
+    };
+
     type fcOptions = {
         to: useStateReturnValue,
         paths: paths,
@@ -51,8 +57,8 @@ declare module 'clearx' {
         teardown(): boolean
     }
 
-    export default class ClearX {
-        constructor (data: JsonObject)
+    class ClearX {
+        constructor(data: JsonObject, options?: initOptions)
         get(key: path, defaultValue?: any): any
         set(key: path, value: any, doNotReplace?: boolean): boolean
         coalesce(keys: pathList, defaultValue?: any): any
@@ -80,5 +86,5 @@ declare module 'clearx' {
         onUpdate(fn: Function): unlink
         teardown(): boolean
     }
-
+    export default ClearX
 }
